@@ -23,12 +23,13 @@ function SignupForm() {
     setLoading(true)
     setError('')
     const supabase = createClient()
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || location.origin
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { plan: isPro ? 'pro_pending' : 'free' },
-        emailRedirectTo: `${location.origin}/api/auth/callback`,
+        emailRedirectTo: `${appUrl}/api/auth/callback`,
       },
     })
     if (error) { setError(error.message); setLoading(false) }
