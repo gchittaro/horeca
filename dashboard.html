@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HoReCa.Watch — Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8F8FC; color: #1a1a2e; min-height: 100vh; }
+
+  /* ── TOPBAR ── */
+  .topbar { background: #26215C; padding: 11px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 16px; font-weight: 500; color: #fff; letter-spacing: -0.02em; text-decoration: none; }
+  .logo span { color: #AFA9EC; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .live-badge { font-size: 10px; background: #1F1A4A; color: #1D9E75; padding: 4px 12px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
+  .live-dot { width: 5px; height: 5px; border-radius: 50%; background: #1D9E75; }
+  .topbar-icon { color: #AFA9EC; font-size: 18px; cursor: pointer; }
+  .topbar-plan { font-size: 11px; background: #3C3489; color: #AFA9EC; padding: 3px 10px; border-radius: 20px; }
+
+  /* ── SUBNAV ── */
+  .subnav { background: #1F1A4A; padding: 0 24px; display: flex; gap: 0; border-bottom: 0.5px solid #3C3489; overflow-x: auto; scrollbar-width: none; }
+  .subnav::-webkit-scrollbar { display: none; }
+  .subnav-item { font-size: 12px; color: #AFA9EC; padding: 11px 16px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; text-decoration: none; }
+  .subnav-item:hover { color: #D3D1C7; }
+  .subnav-item.active { color: #fff; border-bottom: 2px solid #7F77DD; }
+
+  /* ── BODY ── */
+  .body { padding: 18px 24px; display: flex; flex-direction: column; gap: 16px; max-width: 1100px; margin: 0 auto; }
+
+  /* ── KPI ROW ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .kpi { background: #26215C; border-radius: 11px; padding: 15px; }
+  .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: #AFA9EC; margin-bottom: 5px; }
+  .kpi-val { font-size: 22px; font-weight: 500; color: #fff; line-height: 1.1; }
+  .kpi-delta { font-size: 11px; margin-top: 4px; }
+  .up { color: #F09595; }
+  .down { color: #97C459; }
+  .neutral { color: #AFA9EC; }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* ── CARD ── */
+  .card { background: #fff; border: 0.5px solid #CECBF6; border-radius: 13px; padding: 18px; }
+  .card-title { font-size: 13px; font-weight: 500; color: #26215C; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #7F77DD; font-weight: 400; }
+
+  /* ── PROD LIST ── */
+  .prod-list { display: flex; flex-direction: column; gap: 8px; }
+  .prod { display: flex; align-items: center; justify-content: space-between; padding: 9px 11px; background: #F8F8FC; border-radius: 9px; }
+  .prod-name { font-size: 12px; font-weight: 500; color: #26215C; }
+  .prod-source { font-size: 10px; color: #888780; margin-top: 2px; }
+  .prod-price { font-size: 14px; font-weight: 500; color: #26215C; text-align: right; }
+  .pill { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; display: inline-block; margin-top: 2px; }
+  .pill-up { background: #FCEBEB; color: #A32D2D; }
+  .pill-down { background: #EAF3DE; color: #3B6D11; }
+  .pill-flat { background: #EEEDFE; color: #3C3489; }
+  .spark { display: flex; gap: 2px; align-items: flex-end; height: 22px; margin-top: 5px; }
+  .sb { width: 6px; border-radius: 1px 1px 0 0; background: #CECBF6; }
+  .sb.hi { background: #7F77DD; }
+  .sb.alert { background: #E24B4A; }
+
+  /* ── GEO LIST ── */
+  .geo-list { display: flex; flex-direction: column; gap: 9px; }
+  .geo { display: flex; gap: 11px; align-items: flex-start; padding: 11px 12px; background: #EEEDFE; border-radius: 9px; border: 0.5px solid #CECBF6; }
+  .geo.positive { background: #E1F5EE; border-color: #9FE1CB; }
+  .geo-icon { width: 28px; height: 28px; border-radius: 7px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .geo-icon i { font-size: 14px; color: #534AB7; }
+  .geo.positive .geo-icon i { color: #0F6E56; }
+  .geo-title { font-size: 12px; font-weight: 500; color: #26215C; line-height: 1.4; margin-bottom: 2px; }
+  .geo.positive .geo-title { color: #04342C; }
+  .geo-sub { font-size: 11px; color: #534AB7; line-height: 1.4; margin-bottom: 4px; }
+  .geo.positive .geo-sub { color: #0F6E56; }
+  .geo-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: #FAEEDA; color: #633806; font-weight: 500; display: inline-block; }
+  .geo.positive .geo-badge { background: #E1F5EE; color: #085041; }
+
+  /* ── ALERT LIST ── */
+  .alert-list { display: flex; flex-direction: column; gap: 9px; }
+  .alert { display: flex; gap: 12px; align-items: center; padding: 11px 14px; background: #fff; border: 0.5px solid #E8E7F4; border-radius: 9px; }
+  .alert-l { width: 3px; height: 36px; border-radius: 2px; flex-shrink: 0; }
+  .alert-body { flex: 1; }
+  .alert-title { font-size: 12px; font-weight: 500; color: #26215C; margin-bottom: 2px; }
+  .alert-sub { font-size: 11px; color: #5F5E5A; line-height: 1.4; }
+  .alert-time { font-size: 10px; color: #888780; white-space: nowrap; }
+
+  /* ── FOOTER BAR ── */
+  .footer-bar { background: #26215C; padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .footer-txt { font-size: 10px; color: #534AB7; }
+  .footer-btn { font-size: 12px; color: #AFA9EC; display: flex; align-items: center; gap: 5px; cursor: pointer; background: none; border: none; }
+  .footer-btn:hover { color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/" class="logo">HoReCa<span>.</span>Watch</a>
+  <div class="topbar-right">
+    <div class="live-badge"><div class="live-dot"></div>Mise à jour S21 · 2026</div>
+    <i class="ti ti-bell topbar-icon"></i>
+    <i class="ti ti-user-circle topbar-icon"></i>
+    <div class="topbar-plan">Pro</div>
+  </div>
+</div>
+
+<div class="subnav">
+  <a href="/dashboard" class="subnav-item active">Vue globale</a>
+  <a href="/dashboard/food" class="subnav-item">Food</a>
+  <a href="/dashboard/boissons" class="subnav-item">Boissons</a>
+  <a href="/dashboard/energie" class="subnav-item">Énergie</a>
+  <a href="/dashboard/rh" class="subnav-item">RH</a>
+  <a href="/dashboard/juridique" class="subnav-item">Juridique</a>
+  <a href="/dashboard/geopolitique" class="subnav-item">Géopolitique</a>
+  <a href="/profil" class="subnav-item">Mon établissement</a>
+</div>
+
+<div class="body">
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Indice panier CHR</div>
+      <div class="kpi-val">124,3</div>
+      <div class="kpi-delta up">↑ +2,1% ce mois</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Alertes actives</div>
+      <div class="kpi-val">3</div>
+      <div class="kpi-delta neutral">2 hausses · 1 baisse</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Signal géopolitique</div>
+      <div class="kpi-val" style="font-size:14px; padding-top:5px; color:#FAC775;">Cacao · Café</div>
+      <div class="kpi-delta up">Tension active</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Électricité spot</div>
+      <div class="kpi-val">82,4 €</div>
+      <div class="kpi-delta down">↓ −6,1% · EPEX</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid-2">
+
+    <!-- Matières premières -->
+    <div class="card">
+      <div class="card-title">Matières premières Food <span class="card-tag">FranceAgriMer · Matif · ICE</span></div>
+      <div class="prod-list">
+        <div class="prod">
+          <div>
+            <div class="prod-name">Café arabica</div>
+            <div class="prod-source">ICE NY · livre</div>
+            <div class="spark"><div class="sb" style="height:8px;"></div><div class="sb" style="height:11px;"></div><div class="sb" style="height:9px;"></div><div class="sb hi" style="height:15px;"></div><div class="sb alert" style="height:22px;"></div></div>
+          </div>
+          <div style="text-align:right;">
+            <div class="prod-price">5,34 €</div>
+            <div class="pill pill-up">↑ +11,2%</div>
+          </div>
+        </div>
+        <div class="prod">
+          <div>
+            <div class="prod-name">Bœuf haché 15%</div>
+            <div class="prod-source">FranceAgriMer · kg</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="prod-price">7,85 €</div>
+            <div class="pill pill-up">↑ +4,7%</div>
+          </div>
+        </div>
+        <div class="prod">
+          <div>
+            <div class="prod-name">Cacao brut</div>
+            <div class="prod-source">ICE · tonne</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="prod-price">6 840 €</div>
+            <div class="pill pill-down">↓ −5,2%</div>
+          </div>
+        </div>
+        <div class="prod">
+          <div>
+            <div class="prod-name">Lait entier</div>
+            <div class="prod-source">Atla · 1 000L</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="prod-price">415 €</div>
+            <div class="pill pill-up">↑ +3,1%</div>
+          </div>
+        </div>
+        <div class="prod">
+          <div>
+            <div class="prod-name">Farine T55</div>
+            <div class="prod-source">Matif · quintal</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="prod-price">28,50 €</div>
+            <div class="pill pill-flat">= stable</div>
+          </div>
+        </div>
+        <div class="prod">
+          <div>
+            <div class="prod-name">Huile tournesol</div>
+            <div class="prod-source">Matif · tonne</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="prod-price">1 120 €</div>
+            <div class="pill pill-down">↓ −2,8%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Géopolitique -->
+    <div class="card">
+      <div class="card-title">Signaux géopolitiques <span class="card-tag">GDELT · toutes les heures</span></div>
+      <div class="geo-list">
+        <div class="geo">
+          <div class="geo-icon"><i class="ti ti-world"></i></div>
+          <div>
+            <div class="geo-title">Sécheresse Côte d'Ivoire — tension cacao</div>
+            <div class="geo-sub">Intensification médiatique +38% sur 7j. Probabilité de hausse élevée.</div>
+            <div class="geo-badge">Horizon 4–6 semaines</div>
+          </div>
+        </div>
+        <div class="geo">
+          <div class="geo-icon"><i class="ti ti-ripple"></i></div>
+          <div>
+            <div class="geo-title">Tensions Mer Rouge — épices et riz</div>
+            <div class="geo-sub">Détournements maritimes actifs. Routes Asie-Europe allongées.</div>
+            <div class="geo-badge">Surveillance active</div>
+          </div>
+        </div>
+        <div class="geo positive">
+          <div class="geo-icon"><i class="ti ti-check"></i></div>
+          <div>
+            <div class="geo-title">Brésil café — stabilisation probable</div>
+            <div class="geo-sub">Pluies annoncées zone arabica. Signal de détente dans 3–4 semaines.</div>
+            <div class="geo-badge">Signal positif</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ALERTES -->
+  <div class="card">
+    <div class="card-title">Alertes de la semaine <span class="card-tag">Semaine 21 · 2026</span></div>
+    <div class="alert-list">
+      <div class="alert">
+        <div class="alert-l" style="background:#E24B4A;"></div>
+        <div class="alert-body">
+          <div class="alert-title">Café arabica — seuil de +10% franchi</div>
+          <div class="alert-sub">Votre seuil d'alerte personnalisé a été déclenché. Voir signaux géopolitiques Brésil.</div>
+        </div>
+        <div class="alert-time">Aujourd'hui</div>
+      </div>
+      <div class="alert">
+        <div class="alert-l" style="background:#BA7517;"></div>
+        <div class="alert-body">
+          <div class="alert-title">SMIC horaire revalorisé au 01/05 — grilles HCR à mettre à jour</div>
+          <div class="alert-sub">Nouveau taux : 12,08 €/h. Convention collective HCR impactée dès juin 2026.</div>
+        </div>
+        <div class="alert-time">01/05</div>
+      </div>
+      <div class="alert">
+        <div class="alert-l" style="background:#7F77DD;"></div>
+        <div class="alert-body">
+          <div class="alert-title">Décret affichage prix cartes — applicable le 01/09/2026</div>
+          <div class="alert-sub">Mention TTC et TVA distincte obligatoire. Délai de mise en conformité : 15 semaines.</div>
+        </div>
+        <div class="alert-time">Sem. 18</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer-bar">
+  <div class="footer-txt">Sources : FranceAgriMer · Matif · ICE · RTE · GDELT · JO · Légifrance — Semaine 21, 2026</div>
+  <button class="footer-btn"><i class="ti ti-download" style="font-size:13px;"></i> Exporter PDF</button>
+</div>
+
+</body>
+</html>

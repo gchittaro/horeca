@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HoReCa.Watch — Mon établissement</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8F8FC; color: #1a1a2e; min-height: 100vh; }
+
+  .topbar { background: #26215C; padding: 11px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 16px; font-weight: 500; color: #fff; letter-spacing: -0.02em; text-decoration: none; }
+  .logo span { color: #AFA9EC; }
+  .back { font-size: 13px; color: #D3D1C7; display: flex; align-items: center; gap: 6px; text-decoration: none; }
+  .back:hover { color: #fff; }
+
+  .body { padding: 24px; max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+  .page-header { padding-top: 4px; }
+  .page-title { font-size: 22px; font-weight: 500; color: #26215C; margin-bottom: 6px; }
+  .page-sub { font-size: 13px; color: #5F5E5A; line-height: 1.6; }
+
+  .card { background: #fff; border: 0.5px solid #CECBF6; border-radius: 13px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .card-title { font-size: 14px; font-weight: 500; color: #26215C; display: flex; align-items: center; gap: 8px; }
+  .card-title i { font-size: 17px; color: #534AB7; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: span 2; }
+  .field label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #5F5E5A; font-weight: 500; }
+  .field select, .field input[type="text"], .field input[type="number"] {
+    font-size: 13px; padding: 9px 11px; border-radius: 8px;
+    border: 0.5px solid #CECBF6; background: #F8F8FC; color: #26215C; width: 100%;
+    -webkit-appearance: none;
+  }
+  .field select:focus, .field input:focus { outline: none; border-color: #7F77DD; background: #fff; }
+
+  .vol-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 500px) { .vol-grid { grid-template-columns: 1fr; } }
+  .vol-item { background: #F8F8FC; border: 0.5px solid #CECBF6; border-radius: 9px; padding: 11px 13px; }
+  .vol-label { font-size: 11px; color: #5F5E5A; display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+  .vol-label i { font-size: 14px; color: #534AB7; }
+  .vol-input-row { display: flex; align-items: baseline; gap: 6px; }
+  .vol-input { font-size: 18px; font-weight: 500; color: #26215C; border: none; background: transparent; width: 90px; padding: 0; }
+  .vol-input:focus { outline: none; }
+  .vol-unit { font-size: 11px; color: #888780; }
+
+  /* Impact box */
+  .impact-box { background: #26215C; border-radius: 13px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .impact-header { display: flex; align-items: center; justify-content: space-between; }
+  .impact-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: #AFA9EC; font-weight: 500; }
+  .impact-week { font-size: 10px; color: #534AB7; }
+  .impact-summary { font-size: 13px; color: #D3D1C7; line-height: 1.7; }
+  .impact-summary strong { color: #F09595; font-weight: 500; }
+  .impact-summary .good { color: #97C459; }
+  .impact-rows { display: flex; flex-direction: column; gap: 6px; }
+  .impact-row { display: flex; justify-content: space-between; align-items: center; background: #1F1A4A; border-radius: 8px; padding: 9px 13px; }
+  .impact-row-label { font-size: 12px; color: #D3D1C7; }
+  .impact-row-val { font-size: 13px; font-weight: 500; }
+  .impact-row-val.up { color: #F09595; }
+  .impact-row-val.down { color: #97C459; }
+  .impact-row-val.flat { color: #AFA9EC; }
+  .impact-total { display: flex; justify-content: space-between; align-items: center; padding: 10px 13px; border-top: 0.5px solid #3C3489; margin-top: 2px; }
+  .impact-total-label { font-size: 12px; color: #AFA9EC; font-weight: 500; }
+  .impact-total-val { font-size: 16px; font-weight: 500; color: #F09595; }
+
+  /* Alert toggles */
+  .alert-list { display: flex; flex-direction: column; gap: 9px; }
+  .alert-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; background: #F8F8FC; border: 0.5px solid #CECBF6; border-radius: 9px; cursor: pointer; }
+  .alert-toggle:hover { background: #F0EFF9; }
+  .alert-toggle-left { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+  .alert-toggle-name { font-size: 13px; font-weight: 500; color: #26215C; }
+  .alert-toggle-sub { font-size: 11px; color: #888780; line-height: 1.4; }
+  .toggle-pill { width: 38px; height: 22px; border-radius: 11px; display: flex; align-items: center; padding: 2px; cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
+  .toggle-pill.on { background: #26215C; justify-content: flex-end; }
+  .toggle-pill.off { background: #D3D1C7; justify-content: flex-start; }
+  .toggle-knob { width: 18px; height: 18px; border-radius: 50%; background: #fff; }
+
+  .save-btn { background: #26215C; color: #fff; font-size: 14px; font-weight: 500; padding: 13px; border-radius: 10px; border: none; cursor: pointer; text-align: center; width: 100%; }
+  .save-btn:hover { background: #3C3489; }
+
+  .privacy-note { font-size: 11px; color: #888780; text-align: center; line-height: 1.5; padding-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/" class="logo">HoReCa<span>.</span>Watch</a>
+  <a href="/dashboard" class="back"><i class="ti ti-arrow-left" style="font-size:14px;"></i>Retour au dashboard</a>
+</div>
+
+<div class="body">
+
+  <div class="page-header">
+    <div class="page-title">Mon établissement</div>
+    <div class="page-sub">Ces informations permettent à HoReCa.Watch de calculer l'impact réel des variations de marché sur vos achats — pas des données génériques, mais votre situation exacte.</div>
+  </div>
+
+  <!-- Infos générales -->
+  <div class="card">
+    <div class="card-title"><i class="ti ti-building-store"></i>Informations générales</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Type d'établissement</label>
+        <select>
+          <option>Restaurant traditionnel</option>
+          <option>Hôtel-restaurant</option>
+          <option>Brasserie</option>
+          <option>Restauration rapide</option>
+          <option>Traiteur / Collectivité</option>
+          <option>Bar / Café</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Couverts par jour (moy.)</label>
+        <input type="number" placeholder="ex. 80" value="80" />
+      </div>
+      <div class="field">
+        <label>Nombre de chambres</label>
+        <input type="number" placeholder="Si hôtel — laisser vide sinon" />
+      </div>
+      <div class="field">
+        <label>Région</label>
+        <select>
+          <option>Île-de-France</option>
+          <option>Auvergne-Rhône-Alpes</option>
+          <option>Provence-Alpes-Côte d'Azur</option>
+          <option>Occitanie</option>
+          <option selected>Grand Est</option>
+          <option>Bretagne</option>
+          <option>Nouvelle-Aquitaine</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="field full">
+        <label>Fournisseurs principaux (optionnel)</label>
+        <input type="text" placeholder="ex. Transgourmet, Metro, Sysco France, grossiste local..." />
+      </div>
+    </div>
+  </div>
+
+  <!-- Volumes d'achats -->
+  <div class="card">
+    <div class="card-title"><i class="ti ti-shopping-cart"></i>Volumes d'achats mensuels</div>
+    <div class="vol-grid">
+      <div class="vol-item">
+        <div class="vol-label"><i class="ti ti-meat"></i>Viandes</div>
+        <div class="vol-input-row"><input class="vol-input" type="number" value="1200" /><div class="vol-unit">€ / mois</div></div>
+      </div>
+      <div class="vol-item">
+        <div class="vol-label"><i class="ti ti-egg"></i>Produits laitiers & œufs</div>
+        <div class="vol-input-row"><input class="vol-input" type="number" value="480" /><div class="vol-unit">€ / mois</div></div>
+      </div>
+      <div class="vol-item">
+        <div class="vol-label"><i class="ti ti-coffee"></i>Café & boissons chaudes</div>
+        <div class="vol-input-row"><input class="vol-input" type="number" value="320" /><div class="vol-unit">€ / mois</div></div>
+      </div>
+      <div class="vol-item">
+        <div class="vol-label"><i class="ti ti-wheat"></i>Farine & pâtisserie</div>
+        <div class="vol-input-row"><input class="vol-input" type="number" value="210" /><div class="vol-unit">€ / mois</div></div>
+      </div>
+      <div class="vol-item">
+        <div class="vol-label"><i class="ti ti-droplet"></i>Huiles & matières grasses</div>
+        <div class="vol-input-row"><input class="vol-input" type="number" value="150" /><div class="vol-unit">€ / mois</div></div>
+      </div>
+      <div class="vol-item">
+        <div class="vol-label"><i class="ti ti-bolt"></i>Énergie (élec + gaz)</div>
+        <div class="vol-input-row"><input class="vol-input" type="number" value="900" /><div class="vol-unit">€ / mois</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Impact calculé -->
+  <div class="impact-box">
+    <div class="impact-header">
+      <div class="impact-title">Impact estimé cette semaine</div>
+      <div class="impact-week">Semaine 21 · 2026</div>
+    </div>
+    <div class="impact-summary">
+      Basé sur vos volumes, les variations de marché représentent un surcoût estimé de <strong>+53 € ce mois</strong>, principalement café et viande. L'électricité compense avec <span class="good">−55 €</span>.
+    </div>
+    <div class="impact-rows">
+      <div class="impact-row">
+        <div class="impact-row-label">Café arabica (+11,2% · 320 €/mois)</div>
+        <div class="impact-row-val up">+36 €</div>
+      </div>
+      <div class="impact-row">
+        <div class="impact-row-label">Viande bovine (+4,7% · 1 200 €/mois)</div>
+        <div class="impact-row-val up">+56 €</div>
+      </div>
+      <div class="impact-row">
+        <div class="impact-row-label">Produits laitiers (+3,1% · 480 €/mois)</div>
+        <div class="impact-row-val up">+15 €</div>
+      </div>
+      <div class="impact-row">
+        <div class="impact-row-label">Électricité spot (−6,1% · 900 €/mois)</div>
+        <div class="impact-row-val down">−55 €</div>
+      </div>
+      <div class="impact-row">
+        <div class="impact-row-label">Huile tournesol (−2,8% · 150 €/mois)</div>
+        <div class="impact-row-val down">−4 €</div>
+      </div>
+      <div class="impact-row">
+        <div class="impact-row-label">Farine T55 (stable)</div>
+        <div class="impact-row-val flat">= 0 €</div>
+      </div>
+    </div>
+    <div class="impact-total">
+      <div class="impact-total-label">Variation nette estimée</div>
+      <div class="impact-total-val">+48 € / mois</div>
+    </div>
+  </div>
+
+  <!-- Alertes personnalisées -->
+  <div class="card">
+    <div class="card-title"><i class="ti ti-bell"></i>Alertes personnalisées pour mon établissement</div>
+    <div class="alert-list">
+      <div class="alert-toggle">
+        <div class="alert-toggle-left">
+          <div class="alert-toggle-name">Surcoût mensuel estimé supérieur à 200 €</div>
+          <div class="alert-toggle-sub">Email dès que l'impact cumulé dépasse votre seuil personnalisé</div>
+        </div>
+        <div class="toggle-pill on"><div class="toggle-knob"></div></div>
+      </div>
+      <div class="alert-toggle">
+        <div class="alert-toggle-left">
+          <div class="alert-toggle-name">Signal géopolitique sur un produit que j'achète</div>
+          <div class="alert-toggle-sub">Notification anticipée 4–6 semaines avant la hausse probable</div>
+        </div>
+        <div class="toggle-pill on"><div class="toggle-knob"></div></div>
+      </div>
+      <div class="alert-toggle">
+        <div class="alert-toggle-left">
+          <div class="alert-toggle-name">Nouvelle réglementation CHR applicable</div>
+          <div class="alert-toggle-sub">Résumé + délai de mise en conformité dès publication au JO</div>
+        </div>
+        <div class="toggle-pill on"><div class="toggle-knob"></div></div>
+      </div>
+      <div class="alert-toggle">
+        <div class="alert-toggle-left">
+          <div class="alert-toggle-name">Rapport mensuel personnalisé en PDF</div>
+          <div class="alert-toggle-sub">Récapitulatif complet avec impact calculé sur vos achats réels</div>
+        </div>
+        <div class="toggle-pill off"><div class="toggle-knob"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="save-btn">Enregistrer mon profil</button>
+
+  <div class="privacy-note">Vos données sont privées et ne sont jamais partagées avec des tiers.<br>Elles sont utilisées uniquement pour le calcul d'impact sur votre établissement.</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    { "path": "/api/cron/fetch-data",       "schedule": "0 6 * * 1" },
+    { "path": "/api/cron/send-newsletter",  "schedule": "0 8 * * 1" },
+    { "path": "/api/cron/check-alerts",     "schedule": "30 8 * * 1" },
+    { "path": "/api/cron/fetch-gdelt",      "schedule": "0 7 * * *" }
+  ]
+}

@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --chr-nuit:    #26215C;
+  --chr-profond: #3C3489;
+  --chr-anchor:  #534AB7;
+  --chr-primary: #7F77DD;
+  --chr-soft:    #AFA9EC;
+  --chr-muted:   #CECBF6;
+  --chr-tint:    #EEEDFE;
+  --chr-surface: #F8F8FC;
+  --chr-up:      #E24B4A;
+  --chr-up-bg:   #FCEBEB;
+  --chr-down:    #639922;
+  --chr-down-bg: #EAF3DE;
+  --chr-warn:    #BA7517;
+  --chr-warn-bg: #FAEEDA;
+  --chr-geo:     #1D9E75;
+  --chr-geo-bg:  #E1F5EE;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--chr-surface);
+  color: #1a1a2e;
+}
+
+/* Ticker scroll animation */
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-track {
+  display: flex;
+  animation: ticker-scroll 28s linear infinite;
+  width: max-content;
+  will-change: transform;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* Scrollbar hide */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

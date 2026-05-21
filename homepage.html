@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HoReCa.Watch — Le pouls du marché CHR</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f8fc; color: #1a1a2e; }
+
+  /* ── NAV ── */
+  nav { background: #26215C; padding: 12px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 18px; font-weight: 500; color: #fff; letter-spacing: -0.02em; text-decoration: none; }
+  .logo span { color: #AFA9EC; }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-link { font-size: 13px; color: #D3D1C7; text-decoration: none; }
+  .nav-link:hover { color: #fff; }
+  .nav-cta { font-size: 13px; background: #fff; color: #26215C; padding: 7px 18px; border-radius: 8px; font-weight: 500; text-decoration: none; border: none; cursor: pointer; }
+  .nav-cta:hover { background: #F0EFF9; }
+
+  /* ── HERO ── */
+  .hero { background: #26215C; padding: 64px 32px 72px; }
+  .hero-inner { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+  .hero-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #D3D1C7; display: flex; align-items: center; gap: 8px; }
+  .hero-dot { width: 6px; height: 6px; border-radius: 50%; background: #1D9E75; flex-shrink: 0; }
+  .hero-title { font-size: 42px; font-weight: 500; color: #fff; letter-spacing: -0.03em; line-height: 1.1; }
+  .hero-title span { color: #AFA9EC; }
+  .hero-sub { font-size: 15px; color: #D3D1C7; line-height: 1.7; max-width: 500px; }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+  .btn-primary { background: #fff; color: #26215C; font-size: 14px; font-weight: 500; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; text-decoration: none; display: inline-block; }
+  .btn-primary:hover { background: #F0EFF9; }
+  .btn-ghost { background: transparent; color: #fff; font-size: 14px; padding: 12px 24px; border-radius: 8px; border: 1px solid #AFA9EC; cursor: pointer; text-decoration: none; display: inline-block; }
+  .btn-ghost:hover { background: #3C3489; }
+  .hero-stats { display: flex; gap: 40px; margin-top: 16px; padding-top: 20px; border-top: 0.5px solid #3C3489; flex-wrap: wrap; }
+  .hero-stat-val { font-size: 24px; font-weight: 500; color: #fff; }
+  .hero-stat-label { font-size: 11px; color: #D3D1C7; margin-top: 3px; }
+
+  /* ── TICKER ── */
+  .ticker { background: #1F1A4A; padding: 10px 32px; display: flex; gap: 28px; overflow-x: auto; border-bottom: 0.5px solid #3C3489; scrollbar-width: none; }
+  .ticker::-webkit-scrollbar { display: none; }
+  .tick-item { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .tick-name { font-size: 11px; color: #D3D1C7; }
+  .tick-val { font-size: 12px; font-weight: 500; color: #fff; }
+  .tick-up { font-size: 11px; color: #F09595; }
+  .tick-down { font-size: 11px; color: #97C459; }
+  .tick-sep { color: #534AB7; font-size: 16px; }
+
+  /* ── SECTIONS ── */
+  .section { padding: 48px 32px; }
+  .section-inner { max-width: 680px; margin: 0 auto; }
+  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #534AB7; margin-bottom: 8px; font-weight: 500; }
+  .section-title { font-size: 24px; font-weight: 500; color: #26215C; letter-spacing: -0.02em; margin-bottom: 24px; }
+  .bg-light { background: #f0f0f8; }
+
+  /* ── FEATURES ── */
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+  .feat { background: #fff; border: 0.5px solid #CECBF6; border-radius: 12px; padding: 20px; }
+  .feat-icon { width: 38px; height: 38px; border-radius: 9px; background: #26215C; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+  .feat-icon i { font-size: 19px; color: #AFA9EC; }
+  .feat-title { font-size: 14px; font-weight: 500; color: #26215C; margin-bottom: 6px; }
+  .feat-desc { font-size: 12px; color: #5F5E5A; line-height: 1.6; }
+
+  /* ── SIGNALS ── */
+  .signal-section { background: #F0EFF9; padding: 48px 32px; }
+  .signals { display: flex; flex-direction: column; gap: 10px; max-width: 680px; margin: 0 auto; }
+  .sig { display: flex; align-items: flex-start; gap: 14px; background: #fff; border: 0.5px solid #CECBF6; border-radius: 12px; padding: 14px 16px; }
+  .sig-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sig-icon.geo { background: #E1F5EE; }
+  .sig-icon.geo i { color: #0F6E56; }
+  .sig-icon.food { background: #FAEEDA; }
+  .sig-icon.food i { color: #854F0B; }
+  .sig-icon.legal { background: #26215C; }
+  .sig-icon.legal i { color: #AFA9EC; }
+  .sig-icon i { font-size: 15px; }
+  .sig-title { font-size: 13px; font-weight: 500; color: #26215C; margin-bottom: 3px; }
+  .sig-desc { font-size: 12px; color: #444441; line-height: 1.5; margin-bottom: 4px; }
+  .sig-time { font-size: 10px; color: #888780; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ── PRICING ── */
+  .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; max-width: 680px; margin: 0 auto; }
+  .plan { background: #fff; border: 0.5px solid #CECBF6; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+  .plan.featured { border: 2px solid #26215C; }
+  .plan-badge { font-size: 10px; background: #26215C; color: #fff; padding: 3px 10px; border-radius: 20px; display: inline-block; font-weight: 500; align-self: flex-start; }
+  .plan-name { font-size: 15px; font-weight: 500; color: #26215C; }
+  .plan-price { font-size: 28px; font-weight: 500; color: #26215C; }
+  .plan-price span { font-size: 14px; color: #888780; font-weight: 400; }
+  .plan-desc { font-size: 12px; color: #5F5E5A; line-height: 1.5; padding-top: 8px; border-top: 0.5px solid #E8E7F4; }
+  .plan-features { display: flex; flex-direction: column; gap: 7px; flex: 1; }
+  .plan-feat { font-size: 12px; color: #26215C; display: flex; align-items: flex-start; gap: 7px; line-height: 1.5; }
+  .plan-feat i { font-size: 13px; color: #26215C; margin-top: 1px; flex-shrink: 0; }
+  .plan-feat.muted { color: #B4B2A9; }
+  .plan-feat.muted i { color: #D3D1C7; }
+  .plan-cta { font-size: 13px; font-weight: 500; text-align: center; padding: 10px; border-radius: 9px; cursor: pointer; margin-top: 4px; text-decoration: none; display: block; }
+  .plan-cta.dark { background: #26215C; color: #fff; border: none; }
+  .plan-cta.dark:hover { background: #3C3489; }
+  .plan-cta.outline { background: transparent; color: #26215C; border: 1px solid #26215C; }
+  .plan-cta.outline:hover { background: #F0EFF9; }
+
+  /* ── FOOTER ── */
+  footer { background: #26215C; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .footer-logo { font-size: 15px; font-weight: 500; color: #D3D1C7; letter-spacing: -0.02em; }
+  .footer-logo span { color: #AFA9EC; }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-link { font-size: 12px; color: #AFA9EC; text-decoration: none; }
+  .footer-link:hover { color: #fff; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">HoReCa<span>.</span>Watch</a>
+  <div class="nav-links">
+    <a href="#features" class="nav-link">Fonctionnalités</a>
+    <a href="#pricing" class="nav-link">Tarifs</a>
+    <a href="#about" class="nav-link">À propos</a>
+  </div>
+  <a href="/signup" class="nav-cta">Essai gratuit</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag"><div class="hero-dot"></div>Veille marché CHR · France · mis à jour chaque semaine</div>
+    <h1 class="hero-title">Le pouls du<br>marché <span>CHR</span><br>en temps réel.</h1>
+    <p class="hero-sub">Prix matières premières, signaux géopolitiques, alertes réglementation — tout ce dont vous avez besoin pour anticiper, pas subir.</p>
+    <div class="hero-actions">
+      <a href="/signup" class="btn-primary">Accès gratuit 30 jours</a>
+      <a href="/dashboard-demo" class="btn-ghost">Voir le dashboard</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="hero-stat-val">18</div><div class="hero-stat-label">Indicateurs suivis</div></div>
+      <div><div class="hero-stat-val">6</div><div class="hero-stat-label">Catégories de veille</div></div>
+      <div><div class="hero-stat-val">GDELT</div><div class="hero-stat-label">Signal géopolitique</div></div>
+      <div><div class="hero-stat-val">1h</div><div class="hero-stat-label">Fréquence de mise à jour</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="ticker">
+  <div class="tick-item"><div class="tick-name">Café arabica</div><div class="tick-val">5,34 €</div><div class="tick-up">↑ +11,2%</div></div>
+  <div class="tick-sep">·</div>
+  <div class="tick-item"><div class="tick-name">Cacao</div><div class="tick-val">6 840 €/t</div><div class="tick-down">↓ −5,2%</div></div>
+  <div class="tick-sep">·</div>
+  <div class="tick-item"><div class="tick-name">Électricité spot</div><div class="tick-val">82,40 €/MWh</div><div class="tick-down">↓ −6,1%</div></div>
+  <div class="tick-sep">·</div>
+  <div class="tick-item"><div class="tick-name">Bœuf haché</div><div class="tick-val">7,85 €/kg</div><div class="tick-up">↑ +4,7%</div></div>
+  <div class="tick-sep">·</div>
+  <div class="tick-item"><div class="tick-name">Indice panier CHR</div><div class="tick-val">124,3</div><div class="tick-up">↑ +2,1%</div></div>
+</div>
+
+<section id="features" class="section bg-light">
+  <div class="section-inner">
+    <div class="section-label">Ce que vous obtenez</div>
+    <div class="section-title">Tout le marché CHR, une seule plateforme</div>
+    <div class="features">
+      <div class="feat">
+        <div class="feat-icon"><i class="ti ti-chart-line"></i></div>
+        <div class="feat-title">Prix matières premières</div>
+        <div class="feat-desc">18 indicateurs clés actualisés depuis FranceAgriMer, Matif, ICE.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon"><i class="ti ti-world"></i></div>
+        <div class="feat-title">Signaux géopolitiques</div>
+        <div class="feat-desc">GDELT analyse 100+ langues pour anticiper les tensions sur les approvisionnements.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon"><i class="ti ti-bolt"></i></div>
+        <div class="feat-title">Énergie</div>
+        <div class="feat-desc">Électricité spot et gaz TTF via ODRÉ et RTE Open Data.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon"><i class="ti ti-scale"></i></div>
+        <div class="feat-title">Réglementation</div>
+        <div class="feat-desc">JO, DGCCRF, convention HCR — les textes qui comptent, résumés.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon"><i class="ti ti-building-store"></i></div>
+        <div class="feat-title">Profil établissement</div>
+        <div class="feat-desc">Renseignez vos volumes — recevez des alertes calculées pour votre situation réelle.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon"><i class="ti ti-bell"></i></div>
+        <div class="feat-title">Alertes personnalisées</div>
+        <div class="feat-desc">Seuils sur mesure — notifié avant que les prix impactent vos marges.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="signal-section">
+  <div class="section-inner">
+    <div class="section-label">Signaux de la semaine</div>
+    <div class="section-title" style="color:#26215C;">Ce que HoReCa.Watch surveille pour vous</div>
+  </div>
+  <div class="signals">
+    <div class="sig">
+      <div class="sig-icon geo"><i class="ti ti-world"></i></div>
+      <div>
+        <div class="sig-title">Sécheresse Côte d'Ivoire — cacao sous tension</div>
+        <div class="sig-desc">GDELT détecte une intensification médiatique +38% sur 7j. Probabilité de hausse élevée dans 4–6 semaines.</div>
+        <div class="sig-time">Signal géopolitique · GDELT · Semaine 21</div>
+      </div>
+    </div>
+    <div class="sig">
+      <div class="sig-icon food"><i class="ti ti-salad"></i></div>
+      <div>
+        <div class="sig-title">Café arabica : plus haut depuis 18 mois</div>
+        <div class="sig-desc">+11,2% sur le mois, porté par la sécheresse brésilienne et la demande asiatique.</div>
+        <div class="sig-time">Food · ICE NY · Semaine 21</div>
+      </div>
+    </div>
+    <div class="sig">
+      <div class="sig-icon legal"><i class="ti ti-scale"></i></div>
+      <div>
+        <div class="sig-title">Affichage prix cartes — décret applicable le 01/09/2026</div>
+        <div class="sig-desc">Mention TTC et TVA distincte obligatoire sur les menus. 15 semaines pour se mettre en conformité.</div>
+        <div class="sig-time">Juridique · Journal Officiel · Semaine 18</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" class="section">
+  <div class="section-inner">
+    <div class="section-label">Tarifs</div>
+    <div class="section-title">Simple, sans engagement</div>
+  </div>
+  <div class="pricing">
+    <div class="plan">
+      <div class="plan-name">Gratuit</div>
+      <div class="plan-price">0 €<span> /mois</span></div>
+      <div class="plan-desc">Pour découvrir HoReCa.Watch et rester informé des grandes tendances.</div>
+      <div class="plan-features">
+        <div class="plan-feat"><i class="ti ti-check"></i>Newsletter hebdo marché CHR</div>
+        <div class="plan-feat"><i class="ti ti-check"></i>3 indicateurs Food (café, bœuf, farine)</div>
+        <div class="plan-feat muted"><i class="ti ti-lock"></i>Dashboard complet</div>
+        <div class="plan-feat muted"><i class="ti ti-lock"></i>Signaux géopolitiques</div>
+        <div class="plan-feat muted"><i class="ti ti-lock"></i>Alertes personnalisées</div>
+      </div>
+      <a href="/signup" class="plan-cta outline">Commencer gratuitement</a>
+    </div>
+    <div class="plan featured">
+      <div class="plan-badge">Le plus populaire</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">19 €<span> /mois</span></div>
+      <div class="plan-desc">Pour les pros qui veulent anticiper et protéger leurs marges.</div>
+      <div class="plan-features">
+        <div class="plan-feat"><i class="ti ti-check"></i>Dashboard complet — 18 indicateurs</div>
+        <div class="plan-feat"><i class="ti ti-check"></i>Signaux géopolitiques GDELT</div>
+        <div class="plan-feat"><i class="ti ti-check"></i>Profil établissement personnalisé</div>
+        <div class="plan-feat"><i class="ti ti-check"></i>Alertes calculées pour vos volumes</div>
+        <div class="plan-feat"><i class="ti ti-check"></i>Archives 12 mois</div>
+      </div>
+      <a href="/signup?plan=pro" class="plan-cta dark">Démarrer l'essai gratuit</a>
+    </div>
+    <div class="plan">
+      <div class="plan-name">Équipe</div>
+      <div class="plan-price">99 €<span> /mois</span></div>
+      <div class="plan-desc">Pour les groupements, centrales d'achat et multi-établissements.</div>
+      <div class="plan-features">
+        <div class="plan-feat"><i class="ti ti-check"></i>5 utilisateurs inclus</div>
+        <div class="plan-feat"><i class="ti ti-check"></i>Profils multi-établissements</div>
+        <div class="plan-feat"><i class="ti ti-check"></i>Export CSV / PDF hebdo</div>
+        <div class="plan-feat"><i class="ti ti-check"></i>Accès API données brutes</div>
+        <div class="plan-feat"><i class="ti ti-check"></i>Support prioritaire</div>
+      </div>
+      <a href="/contact" class="plan-cta outline">Nous contacter</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">HoReCa<span>.</span>Watch</div>
+  <div class="footer-links">
+    <a href="/legal" class="footer-link">Mentions légales</a>
+    <a href="/cgu" class="footer-link">CGU</a>
+    <a href="/contact" class="footer-link">Contact</a>
+  </div>
+</footer>
+
+</body>
+</html>
