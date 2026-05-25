@@ -18,10 +18,10 @@ Ton rôle est de collecter, analyser et structurer les données de marché chaqu
 
 ## Règles absolues
 1. Ne jamais inventer un chiffre. Si une donnée est absente, mettre "valeur": null.
-2. Toujours citer la source exacte.
+2. Toujours citer la source exacte (Légifrance, JO, FranceAgriMer, GDELT…).
 3. Les variations sont en pourcentage par rapport à la semaine ou au mois précédent.
 4. Pour les signaux géopolitiques : ne signaler que ce qui a un impact direct probable sur les approvisionnements CHR en France dans les 4 à 8 semaines.
-5. Pour la réglementation : ne retenir que les textes applicables en France.
+5. Pour la réglementation CHR : surveiller spécifiquement — SMIC et grilles HCR, TVA restauration, convention collective HCR (IDCC 1979), réglementation sanitaire (HACCP, allergènes, DLC), affichage des prix et menus, conditions de travail dans la restauration, licences et autorisations d'exploitation, normes d'accessibilité ERP restauration.
 6. Niveau de langue : professionnel, factuel, sans sensationnalisme.
 
 ## Format de sortie
@@ -41,8 +41,11 @@ ${rawData.energie || 'Non disponible'}
 ## Flux RSS — L'Hôtellerie Restauration
 ${rawData.rss_chr || 'Non disponible'}
 
-## Flux RSS — Journal Officiel / Légifrance
+## Flux RSS — Journal Officiel (JORF général)
 ${rawData.jo || 'Non disponible'}
+
+## Légifrance / JO — Veille réglementaire CHR (SMIC, TVA, convention HCR, sanitaire)
+${rawData.legifrance_chr || 'Non disponible'}
 
 ## Données GDELT — Signaux géopolitiques
 ${rawData.gdelt || 'Non disponible'}
@@ -78,6 +81,30 @@ async function fetchJO(): Promise<string> {
   } catch { return 'Erreur fetch JO' }
 }
 
+async function fetchLegifranceCHR(): Promise<string> {
+  try {
+    // JO Économie & Social — catégorie travail/social
+    const [resJorf, resTravail] = await Promise.allSettled([
+      fetch('https://www.legifrance.gouv.fr/rss/jorf.xml', { next: { revalidate: 0 } }),
+      fetch('https://travail-emploi.gouv.fr/actualites/rss.xml', { next: { revalidate: 0 } }),
+    ])
+    const parts: string[] = []
+    if (resJorf.status === 'fulfilled' && resJorf.value.ok) {
+      const t = await resJorf.value.text()
+      // Filtrer les items contenant des termes HoReCa dans le XML
+      const items = t.match(/<item>[\s\S]*?<\/item>/g) || []
+      const chrTerms = /restaur|hôtel|hôtellerie|CHR|SMIC|HCR|TVA|sanitaire|hygiène|allergen|affichage|licence|débits/i
+      const relevant = items.filter(i => chrTerms.test(i)).slice(0, 5)
+      parts.push('=== Journal Officiel (items CHR) ===\n' + (relevant.length ? relevant.join('\n') : t.slice(0, 2000)))
+    }
+    if (resTravail.status === 'fulfilled' && resTravail.value.ok) {
+      const t = await resTravail.value.text()
+      parts.push('=== Ministère du Travail RSS ===\n' + t.slice(0, 1500))
+    }
+    return parts.join('\n\n') || 'Non disponible'
+  } catch { return 'Erreur fetch Légifrance CHR' }
+}
+
 async function fetchRSSCHR(): Promise<string> {
   try {
     const res = await fetch('https://www.lhotellerie-restauration.fr/rss.xml', { next: { revalidate: 0 } })
@@ -99,11 +126,12 @@ export async function GET(request: Request) {
   )
 
   // 1. Fetch toutes les sources en parallèle
-  const [franceagrimer, gdelt, jo, rss_chr] = await Promise.all([
+  const [franceagrimer, gdelt, jo, rss_chr, legifrance_chr] = await Promise.all([
     fetchFranceAgriMer(),
     fetchGDELT(),
     fetchJO(),
     fetchRSSCHR(),
+    fetchLegifranceCHR(),
   ])
 
   // 2. Récupérer les données de la semaine précédente
@@ -127,7 +155,7 @@ export async function GET(request: Request) {
       system: buildSystemPrompt(),
       messages: [{
         role: 'user',
-        content: buildUserPrompt({ franceagrimer, gdelt, jo, rss_chr }, JSON.stringify(prevWeek || [])),
+        content: buildUserPrompt({ franceagrimer, gdelt, jo, rss_chr, legifrance_chr }, JSON.stringify(prevWeek || [])),
       }],
     }),
   })

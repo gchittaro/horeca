@@ -3,13 +3,15 @@ import {
   IconChartLine, IconWorld, IconBolt, IconScale,
   IconBuildingStore, IconBell, IconCheck, IconLock,
 } from '@tabler/icons-react'
+import { createClient } from '@/lib/supabase/server'
 import { tickerItems } from '@/lib/mock-data'
+import ProCTA from '@/app/components/ProCTA'
 
 const features = [
   { Icon: IconChartLine,    title: 'Prix matières premières', desc: '18 indicateurs clés actualisés depuis FranceAgriMer, Matif, ICE.' },
   { Icon: IconWorld,        title: 'Signaux géopolitiques',   desc: 'GDELT analyse 100+ langues pour anticiper les tensions sur les approvisionnements.' },
   { Icon: IconBolt,         title: 'Énergie',                 desc: 'Électricité spot et gaz TTF via ODRÉ et RTE Open Data.' },
-  { Icon: IconScale,        title: 'Réglementation',          desc: 'JO, DGCCRF, convention HCR — les textes qui comptent, résumés.' },
+  { Icon: IconScale,        title: 'Réglementation',          desc: 'Légifrance, JO, DGCCRF, convention HCR — les textes qui comptent, résumés.' },
   { Icon: IconBuildingStore, title: 'Profil établissement',   desc: 'Renseignez vos volumes — recevez des alertes calculées pour votre situation réelle.' },
   { Icon: IconBell,         title: 'Alertes personnalisées',  desc: 'Seuils sur mesure — notifié avant que les prix impactent vos marges.' },
 ]
@@ -33,8 +35,8 @@ const signals = [
     type: 'legal' as const,
     Icon: IconScale,
     title: "Affichage prix cartes — décret applicable le 01/09/2026",
-    desc: "Mention TTC et TVA distincte obligatoire sur les menus. 15 semaines pour se mettre en conformité.",
-    time: "Juridique · Journal Officiel · Semaine 18",
+    desc: "Mention TTC et TVA distincte obligatoire sur les menus. 15 semaines pour se mettre en conformité. Source : Légifrance.",
+    time: "Juridique · Légifrance · Semaine 18",
   },
 ]
 
@@ -45,69 +47,104 @@ const sigIconStyle: Record<string, { bg: string; color: string }> = {
 }
 
 const planFeatFree = [
-  { text: 'Newsletter hebdo marché CHR',         locked: false },
-  { text: '3 indicateurs Food (café, bœuf, farine)', locked: false },
-  { text: 'Dashboard complet',                   locked: true },
-  { text: 'Signaux géopolitiques',               locked: true },
-  { text: 'Alertes personnalisées',              locked: true },
+  { text: 'Newsletter hebdo marché CHR',              locked: false },
+  { text: '3 indicateurs Food (café, bœuf, farine)',  locked: false },
+  { text: 'Dashboard complet',                        locked: true  },
+  { text: 'Signaux géopolitiques',                    locked: true  },
+  { text: 'Alertes personnalisées',                   locked: true  },
 ]
 
 const planFeatPro = [
   { text: 'Dashboard complet — 18 indicateurs' },
+  { text: 'Veille Légifrance CHR (lois, décrets, JO)' },
   { text: 'Signaux géopolitiques GDELT' },
   { text: 'Profil établissement personnalisé' },
   { text: 'Alertes email calculées pour vos volumes' },
-  { text: 'Archives 12 mois' },
   { text: 'Export CSV / PDF hebdo' },
   { text: 'Support prioritaire' },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
   const doubled = [...tickerItems, ...tickerItems]
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const plan = user?.user_metadata?.plan as string | undefined
+  const isPro = plan === 'pro' || plan === 'team'
+  const loggedIn = !!user
 
   return (
     <>
       {/* NAV */}
-      <nav style={{ background: '#26215C', padding: '12px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
-        <Link href="/" style={{ fontSize: 18, fontWeight: 500, color: '#fff', letterSpacing: '-0.02em', textDecoration: 'none' }}>
+      <nav className="home-nav" style={{ background: '#26215C', padding: '12px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
+        <Link href="/" style={{ fontSize: 18, fontWeight: 500, color: '#fff', letterSpacing: '-0.02em', textDecoration: 'none', flexShrink: 0 }}>
           HoReCa<span style={{ color: '#AFA9EC' }}>.</span>Watch
         </Link>
-        <div style={{ display: 'flex', gap: 24 }}>
+        <div className="hide-mobile" style={{ display: 'flex', gap: 24 }}>
           <a href="#features" style={{ fontSize: 13, color: '#D3D1C7', textDecoration: 'none' }}>Fonctionnalités</a>
           <a href="#pricing"  style={{ fontSize: 13, color: '#D3D1C7', textDecoration: 'none' }}>Tarifs</a>
         </div>
-        <Link href="/signup" style={{ fontSize: 13, background: '#fff', color: '#26215C', padding: '7px 18px', borderRadius: 8, fontWeight: 500, textDecoration: 'none' }}>
-          Essai gratuit
-        </Link>
+        {user ? (
+          <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+            <Link href="/dashboard" style={{ fontSize: 13, color: '#D3D1C7', padding: '7px 16px', borderRadius: 8, border: '1px solid #3C3489', textDecoration: 'none', fontWeight: 500 }}>
+              Dashboard
+            </Link>
+            <Link href="/profil" style={{ fontSize: 13, background: '#fff', color: '#26215C', padding: '7px 16px', borderRadius: 8, fontWeight: 500, textDecoration: 'none' }}>
+              Mon compte
+            </Link>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+            <Link href="/login" style={{ fontSize: 13, color: '#D3D1C7', padding: '7px 16px', borderRadius: 8, border: '1px solid #3C3489', textDecoration: 'none', fontWeight: 500 }}>
+              Se connecter
+            </Link>
+            <Link href="/signup" style={{ fontSize: 13, background: '#fff', color: '#26215C', padding: '7px 16px', borderRadius: 8, fontWeight: 500, textDecoration: 'none' }}>
+              S&apos;inscrire
+            </Link>
+          </div>
+        )}
       </nav>
 
       {/* HERO */}
-      <section style={{ background: '#26215C', padding: '64px 32px 72px' }}>
+      <section className="home-hero" style={{ background: '#26215C', padding: '64px 32px 72px' }}>
         <div style={{ maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#D3D1C7', display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#1D9E75', flexShrink: 0 }} />
-            Veille marché CHR · France · mis à jour chaque semaine
+            Veille marché CHR · France · mis à jour chaque jour
           </div>
-          <h1 style={{ fontSize: 42, fontWeight: 500, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+          <h1 className="home-hero-h1" style={{ fontSize: 42, fontWeight: 500, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
             Le pouls du<br />marché <span style={{ color: '#AFA9EC' }}>CHR</span><br />en temps réel.
           </h1>
           <p style={{ fontSize: 15, color: '#D3D1C7', lineHeight: 1.7, maxWidth: 500 }}>
             Prix matières premières, signaux géopolitiques, alertes réglementation — tout ce dont vous avez besoin pour anticiper, pas subir.
           </p>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 6 }}>
-            <Link href="/signup" style={{ background: '#fff', color: '#26215C', fontSize: 14, fontWeight: 500, padding: '12px 24px', borderRadius: 8, textDecoration: 'none', display: 'inline-block' }}>
-              Accès gratuit 30 jours
-            </Link>
-            <Link href="/dashboard" style={{ background: 'transparent', color: '#fff', fontSize: 14, padding: '12px 24px', borderRadius: 8, border: '1px solid #AFA9EC', textDecoration: 'none', display: 'inline-block' }}>
-              Voir le dashboard
-            </Link>
+          <div className="home-hero-buttons" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 6 }}>
+            {user ? (
+              <>
+                <Link href="/dashboard" style={{ background: '#fff', color: '#26215C', fontSize: 14, fontWeight: 500, padding: '12px 24px', borderRadius: 8, textDecoration: 'none', display: 'inline-block' }}>
+                  Voir le dashboard
+                </Link>
+                <Link href="/profil" style={{ background: 'transparent', color: '#fff', fontSize: 14, padding: '12px 24px', borderRadius: 8, border: '1px solid #AFA9EC', textDecoration: 'none', display: 'inline-block' }}>
+                  Mon compte
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/signup" style={{ background: '#fff', color: '#26215C', fontSize: 14, fontWeight: 500, padding: '12px 24px', borderRadius: 8, textDecoration: 'none', display: 'inline-block' }}>
+                  Essai gratuit
+                </Link>
+                <Link href="/login" style={{ background: 'transparent', color: '#fff', fontSize: 14, padding: '12px 24px', borderRadius: 8, border: '1px solid #AFA9EC', textDecoration: 'none', display: 'inline-block' }}>
+                  Se connecter
+                </Link>
+              </>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: 40, marginTop: 16, paddingTop: 20, borderTop: '0.5px solid #3C3489', flexWrap: 'wrap' }}>
+          <div className="home-hero-stats" style={{ display: 'flex', gap: 40, marginTop: 16, paddingTop: 20, borderTop: '0.5px solid #3C3489', flexWrap: 'wrap' }}>
             {[
-              { val: '18', label: 'Indicateurs suivis' },
-              { val: '6',  label: 'Catégories de veille' },
-              { val: 'GDELT', label: 'Signal géopolitique' },
-              { val: '1h', label: 'Fréquence de mise à jour' },
+              { val: '18',      label: 'Indicateurs suivis' },
+              { val: '6',       label: 'Catégories de veille' },
+              { val: 'GDELT',   label: 'Signal géopolitique' },
+              { val: '1/jour',  label: 'Fréquence de mise à jour' },
             ].map(s => (
               <div key={s.label}>
                 <div style={{ fontSize: 24, fontWeight: 500, color: '#fff' }}>{s.val}</div>
@@ -118,13 +155,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* TICKER */}
+      {/* TICKER — nom + variation uniquement, prix masqués */}
       <div style={{ background: '#1F1A4A', padding: '10px 0', overflow: 'hidden', borderBottom: '0.5px solid #3C3489' }}>
-        <div className="ticker-track" style={{ gap: 0 }}>
+        <div className="ticker-track">
           {doubled.map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', whiteSpace: 'nowrap', borderRight: i === doubled.length - 1 ? 'none' : '1px solid #3C3489' }}>
               <span style={{ fontSize: 11, color: '#D3D1C7' }}>{item.name}</span>
-              <span style={{ fontSize: 12, fontWeight: 500, color: '#fff' }}>{item.value}</span>
               <span style={{ fontSize: 11, color: item.up === true ? '#F09595' : item.up === false ? '#97C459' : '#AFA9EC' }}>
                 {item.up === true ? '↑' : item.up === false ? '↓' : '='} {item.change}
               </span>
@@ -134,7 +170,7 @@ export default function HomePage() {
       </div>
 
       {/* FEATURES */}
-      <section id="features" style={{ padding: '48px 32px', background: '#f0f0f8' }}>
+      <section id="features" className="home-section" style={{ padding: '48px 32px', background: '#f0f0f8' }}>
         <div style={{ maxWidth: 680, margin: '0 auto' }}>
           <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#534AB7', marginBottom: 8, fontWeight: 500 }}>Ce que vous obtenez</div>
           <div style={{ fontSize: 24, fontWeight: 500, color: '#26215C', letterSpacing: '-0.02em', marginBottom: 24 }}>Tout le marché CHR, une seule plateforme</div>
@@ -153,7 +189,7 @@ export default function HomePage() {
       </section>
 
       {/* SIGNALS */}
-      <section style={{ background: '#F0EFF9', padding: '48px 32px' }}>
+      <section className="home-section" style={{ background: '#F0EFF9', padding: '48px 32px' }}>
         <div style={{ maxWidth: 680, margin: '0 auto', marginBottom: 20 }}>
           <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#534AB7', marginBottom: 8, fontWeight: 500 }}>Signaux de la semaine</div>
           <div style={{ fontSize: 24, fontWeight: 500, color: '#26215C', letterSpacing: '-0.02em' }}>Ce que HoReCa.Watch surveille pour vous</div>
@@ -175,12 +211,12 @@ export default function HomePage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" style={{ padding: '48px 32px' }}>
+      <section id="pricing" className="home-section" style={{ padding: '48px 32px' }}>
         <div style={{ maxWidth: 680, margin: '0 auto 24px' }}>
           <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#534AB7', marginBottom: 8, fontWeight: 500 }}>Tarifs</div>
           <div style={{ fontSize: 24, fontWeight: 500, color: '#26215C', letterSpacing: '-0.02em' }}>Simple, sans engagement</div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(220px, 340px))', gap: 14, maxWidth: 720, margin: '0 auto', justifyContent: 'center' }}>
+        <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(220px, 340px))', gap: 14, maxWidth: 720, margin: '0 auto', justifyContent: 'center' }}>
 
           {/* Plan Gratuit */}
           <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 14, padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -215,9 +251,13 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-            <Link href="/signup?plan=pro" style={{ fontSize: 13, fontWeight: 500, textAlign: 'center', padding: 11, borderRadius: 9, background: '#fff', color: '#26215C', textDecoration: 'none', display: 'block' }}>
-              Démarrer
-            </Link>
+            {isPro ? (
+              <Link href="/dashboard" style={{ fontSize: 13, fontWeight: 500, textAlign: 'center', padding: 11, borderRadius: 9, background: '#fff', color: '#26215C', textDecoration: 'none', display: 'block' }}>
+                Accéder au dashboard
+              </Link>
+            ) : (
+              <ProCTA loggedIn={loggedIn} label="Démarrer" style={{ fontSize: 13, fontWeight: 500, textAlign: 'center', padding: 11, borderRadius: 9, background: '#fff', color: '#26215C', display: 'block', width: '100%' }} />
+            )}
           </div>
         </div>
       </section>

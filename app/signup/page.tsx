@@ -33,7 +33,15 @@ function SignupForm() {
       },
     })
     if (error) { setError(error.message); setLoading(false) }
-    else setDone(true)
+    else {
+      // Créer le contact dans Loops (fire-and-forget)
+      fetch('/api/loops/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, plan: isPro ? 'pro_pending' : 'free' }),
+      }).catch(() => {})
+      setDone(true)
+    }
   }
 
   if (done) {

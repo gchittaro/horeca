@@ -57,3 +57,45 @@ body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .hide-mobile { display: none !important; }
+
+  .topbar-inner {
+    padding: 10px 16px !important;
+    gap: 10px !important;
+  }
+  .topbar-right {
+    gap: 10px !important;
+  }
+  .subnav-inner {
+    padding: 0 8px !important;
+  }
+  .subnav-link {
+    padding: 10px 10px !important;
+    font-size: 11px !important;
+  }
+  .home-nav {
+    padding: 12px 16px !important;
+  }
+  .home-hero {
+    padding: 40px 16px 48px !important;
+  }
+  .home-hero-h1 {
+    font-size: 32px !important;
+  }
+  .home-hero-buttons {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .home-hero-stats {
+    gap: 20px !important;
+  }
+  .home-section {
+    padding: 36px 16px !important;
+  }
+  .pricing-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

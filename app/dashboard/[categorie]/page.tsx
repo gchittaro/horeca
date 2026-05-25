@@ -1,18 +1,28 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getISOWeek } from '@/lib/utils'
+import { getISOWeek, formatUpdateDate } from '@/lib/utils'
 import { mockIndicateurs, mockSignaux } from '@/lib/mock-data'
 import { IconSalad, IconGlassFull, IconBolt, IconUsers, IconScale, IconWorld } from '@tabler/icons-react'
 
 type Categorie = 'food' | 'boissons' | 'energie' | 'rh' | 'juridique' | 'geopolitique'
 
 const categorieConfig: Record<Categorie, { label: string; Icon: React.ElementType }> = {
-  food:         { label: 'Food',         Icon: IconSalad },
+  food:         { label: 'Alimentation', Icon: IconSalad },
   boissons:     { label: 'Boissons',     Icon: IconGlassFull },
   energie:      { label: 'Énergie',      Icon: IconBolt },
   rh:           { label: 'RH',           Icon: IconUsers },
   juridique:    { label: 'Juridique',    Icon: IconScale },
   geopolitique: { label: 'Géopolitique', Icon: IconWorld },
+}
+
+function formatValue(valeur: number, unite: string): string {
+  const num = valeur >= 1000
+    ? valeur.toLocaleString('fr-FR')
+    : Number(valeur).toLocaleString('fr-FR', { minimumFractionDigits: valeur % 1 !== 0 ? 2 : 0 })
+  if (unite.startsWith('€')) return num + ' €'
+  if (unite.startsWith('%')) return num + ' %'
+  if (unite.includes('pts')) return num + ' pts'
+  return num
 }
 
 function PillVariation({ pct }: { pct: number }) {
@@ -63,7 +73,7 @@ export default async function CategoriePage({ params }: { params: Promise<{ cate
         </div>
         <div>
           <div style={{ fontSize: 20, fontWeight: 500, color: '#26215C' }}>{label}</div>
-          <div style={{ fontSize: 12, color: '#888780' }}>Indicateurs · Semaine {semaine}, {annee}</div>
+          <div style={{ fontSize: 12, color: '#888780' }}>Indicateurs · Mis à jour le {formatUpdateDate()}</div>
         </div>
       </div>
 
@@ -80,9 +90,7 @@ export default async function CategoriePage({ params }: { params: Promise<{ cate
                 </div>
                 <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
                   <div style={{ fontSize: 16, fontWeight: 500, color: '#26215C' }}>
-                    {ind.valeur >= 1000
-                      ? ind.valeur.toLocaleString('fr-FR') + ' €'
-                      : Number(ind.valeur).toLocaleString('fr-FR', { minimumFractionDigits: ind.valeur % 1 !== 0 ? 2 : 0 }) + ' €'}
+                    {formatValue(Number(ind.valeur), ind.unite)}
                   </div>
                   <PillVariation pct={Number(ind.variation_pct)} />
                 </div>
@@ -93,8 +101,7 @@ export default async function CategoriePage({ params }: { params: Promise<{ cate
       ) : (
         <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 48, textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>📡</div>
-          <div style={{ fontSize: 14, fontWeight: 500, color: '#26215C', marginBottom: 6 }}>Données en cours de collecte</div>
-          <div style={{ fontSize: 13, color: '#888780' }}>Les indicateurs {label} seront disponibles après le premier cron de fetch.</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: '#26215C' }}>Données en cours de collecte</div>
         </div>
       )}
 

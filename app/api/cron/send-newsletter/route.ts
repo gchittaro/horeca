@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendLoopsEvent } from '@/lib/loops'
 
 function getISOWeek(date: Date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -81,23 +82,33 @@ export async function GET(request: Request) {
       }
     }
 
-    const html = buildNewsletterHtml({ indicateurs: indicateurs || [], signaux: signaux || [], impactBlock, semaine, annee })
+    // Préparer les indicateurs pour Loops (top 5 signaux de la semaine)
+    const topIndicateurs = (indicateurs || []).slice(0, 5).map(i => ({
+      nom: i.nom,
+      valeur: `${i.valeur.toLocaleString('fr-FR')} ${i.unite}`,
+      variation: `${i.variation_pct > 0 ? '+' : ''}${i.variation_pct.toFixed(1)}%`,
+      direction: i.variation_pct > 0 ? 'hausse' : i.variation_pct < 0 ? 'baisse' : 'stable',
+    }))
 
-    const emailRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'HoReCa.Watch <newsletter@horeca.watch>',
-        to: user.email,
-        subject: `Veille CHR — Semaine ${semaine} · ${annee}`,
-        html,
-      }),
+    const topSignaux = (signaux || []).slice(0, 2).map(s => ({
+      titre: s.titre,
+      description: s.description,
+      zone: s.zone,
+      horizon: s.horizon,
+    }))
+
+    // Déclenche l'événement Loops → le Loop "newsletter_weekly" envoie l'email
+    const loopsRes = await sendLoopsEvent(user.email, 'newsletter_weekly', {
+      semaine,
+      annee,
+      isPro,
+      impactEstime: impactBlock ? impactBlock.match(/[\+\-]?\d+ €/)?.[0] ?? '' : '',
+      indicateurs: JSON.stringify(topIndicateurs),
+      signaux: JSON.stringify(topSignaux),
+      dashboardUrl: 'https://horeca.watch/dashboard',
     })
 
-    if (emailRes.ok) { sent++ } else { errors.push(user.email) }
+    if (loopsRes.success !== false) { sent++ } else { errors.push(user.email) }
   }
 
   return NextResponse.json({ ok: true, sent, errors: errors.length ? errors : undefined })

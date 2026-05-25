@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendLoopsEvent } from '@/lib/loops'
 
 function getISOWeek(date: Date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
     const plan = user.user_metadata?.plan || 'free'
     if (plan !== 'pro' && plan !== 'team') continue
 
-    const alertEmails: { subject: string; body: string }[] = []
+    const alertEmails: { eventName: string; properties: Record<string, unknown> }[] = []
 
     // Calcul surcoût
     if (profil.alert_surcout && indicateurs) {
@@ -68,9 +69,14 @@ export async function GET(request: Request) {
       const seuil = profil.seuil_alerte_euros || 200
       if (totalImpact > seuil) {
         alertEmails.push({
-          subject: `⚠️ Alerte HoReCa.Watch — Surcoût estimé de +${totalImpact} €`,
-          body: `<p>Basé sur votre profil établissement, les variations de marché de la semaine ${semaine} représentent un surcoût estimé de <strong style="color:#A32D2D">+${totalImpact} €</strong> ce mois, au-delà de votre seuil de ${seuil} €.</p>
-          <p>Consultez votre <a href="https://horeca.watch/profil">profil établissement</a> pour le détail par produit.</p>`,
+          eventName: 'alert_cost',
+          properties: {
+            impactEstime: `+${totalImpact} €`,
+            seuilEuros: seuil,
+            semaine,
+            annee,
+            dashboardUrl: 'https://horeca.watch/profil',
+          },
         })
       }
     }
@@ -88,28 +94,21 @@ export async function GET(request: Request) {
         )
         if (match && signal.impact === 'hausse') {
           alertEmails.push({
-            subject: `📡 Signal géopolitique HoReCa.Watch — ${signal.titre}`,
-            body: `<p>${signal.titre}</p><p>Produits concernés : ${produits.join(', ')}</p><p>Horizon : ${signal.horizon}</p>`,
+            eventName: 'alert_geopolitical',
+            properties: {
+              titrSignal: signal.titre,
+              produitsLies: produits.join(', '),
+              horizon: signal.horizon,
+              dashboardUrl: 'https://horeca.watch/dashboard/geopolitique',
+            },
           })
         }
       }
     }
 
-    // Envoyer les alertes
-    for (const email of alertEmails) {
-      await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: 'HoReCa.Watch <alertes@horeca.watch>',
-          to: user.email!,
-          subject: email.subject,
-          html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">${email.body}<hr style="margin:16px 0;border-color:#EEEDFE"><p style="font-size:11px;color:#888780;"><a href="https://horeca.watch/profil">Modifier mes alertes</a></p></div>`,
-        }),
-      })
+    // Envoyer les alertes via Loops events
+    for (const alert of alertEmails) {
+      await sendLoopsEvent(user.email!, alert.eventName, alert.properties)
       alertsSent++
     }
   }
