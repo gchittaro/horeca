@@ -6,6 +6,7 @@ import {
 import { createClient } from '@/lib/supabase/server'
 import { tickerItems } from '@/lib/mock-data'
 import ProCTA from '@/app/components/ProCTA'
+import WeeklyBriefDemo from '@/app/components/WeeklyBriefDemo'
 
 const features = [
   { Icon: IconChartLine,    title: 'Prix matières premières', desc: '18 indicateurs clés actualisés depuis FranceAgriMer, Matif, ICE.' },
@@ -209,6 +210,9 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* WEEKLY BRIEF DEMO */}
+      <WeeklyBriefDemo />
 
       {/* PRICING */}
       <section id="pricing" className="home-section" style={{ padding: '48px 32px' }}>
