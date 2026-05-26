@@ -4,6 +4,40 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { IconBrain, IconChartLine, IconBuildingStore, IconBell } from '@tabler/icons-react'
 
+function ProButton({ loggedIn, isPro }: { loggedIn: boolean; isPro: boolean }) {
+  const [loading, setLoading] = useState(false)
+
+  if (isPro) {
+    return (
+      <Link
+        href="/dashboard"
+        style={{ fontSize: 15, fontWeight: 500, color: '#fff', background: '#7F77DD', padding: '14px 36px', borderRadius: 10, textDecoration: 'none', display: 'inline-block' }}
+      >
+        Accéder au dashboard
+      </Link>
+    )
+  }
+
+  async function handleClick() {
+    if (!loggedIn) { window.location.href = '/signup?plan=pro'; return }
+    setLoading(true)
+    const res = await fetch('/api/stripe/checkout', { method: 'POST' })
+    const { url } = await res.json()
+    if (url) window.location.href = url
+    else setLoading(false)
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={loading}
+      style={{ fontSize: 15, fontWeight: 500, color: '#fff', background: '#7F77DD', padding: '14px 36px', borderRadius: 10, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+    >
+      {loading ? 'Redirection…' : 'Essayer le plan Pro — 99€/mois'}
+    </button>
+  )
+}
+
 const roles = [
   { key: 'directeur',  label: '🏨 Directeur' },
   { key: 'chef',       label: '👨‍🍳 Chef de cuisine' },
@@ -57,7 +91,7 @@ const avantages = [
   { Icon: IconBell,          title: 'Alertes personnalisées',          desc: 'Notifié dès qu\'un indicateur dépasse votre seuil d\'impact défini.' },
 ]
 
-export default function WeeklyBriefDemo() {
+export default function WeeklyBriefDemo({ loggedIn = false, isPro = false }: { loggedIn?: boolean; isPro?: boolean }) {
   const [role, setRole] = useState('directeur')
   const roleLabel = roles.find(r => r.key === role)?.label ?? ''
 
@@ -159,24 +193,10 @@ export default function WeeklyBriefDemo() {
 
         {/* CTA */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <Link
-            href="/signup?plan=pro"
-            style={{
-              fontSize: 15,
-              fontWeight: 500,
-              color: '#fff',
-              background: '#7F77DD',
-              padding: '14px 36px',
-              borderRadius: 10,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Essayer le plan Pro — 99€/mois
-          </Link>
-          <div style={{ fontSize: 11, color: '#AFA9EC' }}>
-            soit 24,75 € par semaine
-          </div>
+          <ProButton loggedIn={loggedIn} isPro={isPro} />
+          {!isPro && (
+            <div style={{ fontSize: 11, color: '#AFA9EC' }}>soit 24,75 € par semaine</div>
+          )}
           <div style={{ fontSize: 11, color: '#AFA9EC' }}>
             Sans engagement. Résiliable à tout moment.
           </div>

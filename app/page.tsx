@@ -212,7 +212,7 @@ export default async function HomePage() {
       </section>
 
       {/* WEEKLY BRIEF DEMO */}
-      <WeeklyBriefDemo />
+      <WeeklyBriefDemo loggedIn={loggedIn} isPro={isPro} />
 
       {/* PRICING */}
       <section id="pricing" className="home-section" style={{ padding: '48px 32px' }}>
@@ -237,9 +237,15 @@ export default async function HomePage() {
                 </div>
               ))}
             </div>
-            <Link href="/signup" style={{ fontSize: 13, fontWeight: 500, textAlign: 'center', padding: 11, borderRadius: 9, background: 'transparent', color: '#26215C', border: '1px solid #26215C', textDecoration: 'none', display: 'block' }}>
-              Commencer gratuitement
-            </Link>
+            {loggedIn ? (
+              <Link href="/dashboard" style={{ fontSize: 13, fontWeight: 500, textAlign: 'center', padding: 11, borderRadius: 9, background: 'transparent', color: '#26215C', border: '1px solid #26215C', textDecoration: 'none', display: 'block' }}>
+                Accéder au dashboard
+              </Link>
+            ) : (
+              <Link href="/signup" style={{ fontSize: 13, fontWeight: 500, textAlign: 'center', padding: 11, borderRadius: 9, background: 'transparent', color: '#26215C', border: '1px solid #26215C', textDecoration: 'none', display: 'block' }}>
+                Commencer gratuitement
+              </Link>
+            )}
           </div>
 
           {/* Plan Pro */}
