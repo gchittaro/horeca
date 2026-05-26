@@ -32,7 +32,7 @@
       <mj-column>
 
         <mj-text font-size="14px" color="#26215C" padding="0 0 16px">
-          Bonjour {{firstName}},
+          Bonjour {{prenom}},
         </mj-text>
 
         <mj-text padding="0 0 16px">

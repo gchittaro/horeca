@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function SessionRefresh() {
   useEffect(() => {
-    // La DB est déjà à jour — un simple reload suffit pour relire depuis établissements
-    window.location.href = '/dashboard'
+    createClient().auth.refreshSession().finally(() => {
+      window.location.href = '/dashboard'
+    })
   }, [])
 
   return (

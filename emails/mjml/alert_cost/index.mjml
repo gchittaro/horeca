@@ -63,8 +63,6 @@
       <mj-column>
         <mj-text font-size="11px" color="#888780" align="center" padding="0">
           <a href="{{dashboardUrl}}" style="color:#534AB7;text-decoration:none;">HoReCa.Watch</a>
-          &nbsp;·&nbsp;
-          <a href="{unsubscribe_link}" style="color:#888780;text-decoration:none;">Se désabonner</a>
         </mj-text>
       </mj-column>
     </mj-section>

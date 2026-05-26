@@ -14,6 +14,7 @@ export async function GET(request: Request) {
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId)
     const userId = (session.metadata?.userId || session.client_reference_id) as string | null
+    console.log('[stripe/success] sessionId:', sessionId, 'userId:', userId, 'customer:', session.customer)
 
     if (userId) {
       const admin = createAdmin(
@@ -22,9 +23,10 @@ export async function GET(request: Request) {
       )
 
       // 1. Mettre à jour le JWT
-      await admin.auth.admin.updateUserById(userId, {
+      const { error: authErr } = await admin.auth.admin.updateUserById(userId, {
         user_metadata: { plan: 'pro' },
       })
+      if (authErr) console.error('[stripe/success] updateUserById:', authErr)
 
       // 2. Vérifier si une ligne existe déjà
       const { data: existing } = await admin
@@ -34,8 +36,7 @@ export async function GET(request: Request) {
         .single()
 
       if (existing) {
-        // Ligne existante → simple update
-        await admin
+        const { error: updateErr } = await admin
           .from('etablissements')
           .update({
             plan: 'pro',
@@ -43,9 +44,9 @@ export async function GET(request: Request) {
             updated_at: new Date().toISOString(),
           })
           .eq('user_id', userId)
+        if (updateErr) console.error('[stripe/success] update etablissements:', updateErr)
       } else {
-        // Nouvelle ligne → insert avec valeurs par défaut
-        await admin
+        const { error: insertErr } = await admin
           .from('etablissements')
           .insert({
             user_id: userId,
@@ -59,6 +60,7 @@ export async function GET(request: Request) {
             alert_rapport_pdf: false,
             updated_at: new Date().toISOString(),
           })
+        if (insertErr) console.error('[stripe/success] insert etablissements:', insertErr)
       }
     }
     // 3. Email de confirmation Pro via Loops
