@@ -252,6 +252,12 @@ export default function OrganisationPage() {
     if (err) {
       setOrgError('Une erreur est survenue. Réessayez.')
     } else {
+      // Envoyer l'email d'invitation via Loops
+      fetch('/api/loops/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: inviteEmail.trim().toLowerCase(), orgName: org.nom }),
+      }).catch(() => {})
       setOrgSuccess(`Invitation enregistrée pour ${inviteEmail}`)
       setInviteEmail('')
       await loadData()

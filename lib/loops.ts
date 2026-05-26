@@ -1,5 +1,25 @@
 const API = 'https://app.loops.so/api/v1'
 
+/**
+ * IDs des emails transactionnels Loops.
+ * Créer chaque template dans Loops → Transactional, puis renseigner l'ID dans les env vars Vercel.
+ *
+ * LOOPS_TX_TEAM_INVITE      → variables : orgName, inviteEmail
+ * LOOPS_TX_PRO_CONFIRM      → variables : firstName, dashboardUrl
+ * LOOPS_TX_ALERT_COST       → variables : impactEstime, seuilEuros, semaine, annee, dashboardUrl
+ * LOOPS_TX_ALERT_GEO        → variables : titreSignal, produitsLies, horizon, dashboardUrl
+ * LOOPS_TX_WELCOME_FREE     → variables : firstName
+ * LOOPS_TX_SUBSCRIPTION_END → variables : firstName
+ */
+export const LOOPS_TX = {
+  TEAM_INVITE:      process.env.LOOPS_TX_TEAM_INVITE      ?? '',
+  PRO_CONFIRM:      process.env.LOOPS_TX_PRO_CONFIRM      ?? '',
+  ALERT_COST:       process.env.LOOPS_TX_ALERT_COST       ?? '',
+  ALERT_GEO:        process.env.LOOPS_TX_ALERT_GEO        ?? '',
+  WELCOME_FREE:     process.env.LOOPS_TX_WELCOME_FREE     ?? '',
+  SUBSCRIPTION_END: process.env.LOOPS_TX_SUBSCRIPTION_END ?? '',
+}
+
 async function req(path: string, method: string, body?: unknown) {
   const res = await fetch(`${API}${path}`, {
     method,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createAdmin } from '@supabase/supabase-js'
 import { stripe } from '@/lib/stripe'
+import { sendLoopsTransactional, updateLoopsContact, LOOPS_TX } from '@/lib/loops'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -59,6 +60,23 @@ export async function GET(request: Request) {
             updated_at: new Date().toISOString(),
           })
       }
+    }
+    // 3. Email de confirmation Pro via Loops
+    if (userId) {
+      try {
+        const admin2 = createAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+        const { data: { user: authUser } } = await admin2.auth.admin.getUserById(userId)
+        if (authUser?.email) {
+          await updateLoopsContact(authUser.email, { plan: 'pro' }).catch(() => {})
+          if (LOOPS_TX.PRO_CONFIRM) {
+            const { data: profil } = await admin2.from('etablissements').select('nom_gerant').eq('user_id', userId).single()
+            await sendLoopsTransactional(authUser.email, LOOPS_TX.PRO_CONFIRM, {
+              firstName: profil?.nom_gerant || '',
+              dashboardUrl: 'https://horeca.watch/dashboard',
+            }).catch(() => {})
+          }
+        }
+      } catch { /* non bloquant */ }
     }
   } catch (e) {
     console.error('[stripe/success]', e)

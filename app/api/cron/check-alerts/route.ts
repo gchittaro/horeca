@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { sendLoopsEvent } from '@/lib/loops'
+import { sendLoopsTransactional, LOOPS_TX } from '@/lib/loops'
 
 function getISOWeek(date: Date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -106,10 +106,13 @@ export async function GET(request: Request) {
       }
     }
 
-    // Envoyer les alertes via Loops events
+    // Envoyer les alertes via Loops transactional
     for (const alert of alertEmails) {
-      await sendLoopsEvent(user.email!, alert.eventName, alert.properties)
-      alertsSent++
+      const txId = alert.eventName === 'alert_cost' ? LOOPS_TX.ALERT_COST : LOOPS_TX.ALERT_GEO
+      if (txId) {
+        await sendLoopsTransactional(user.email!, txId, alert.properties).catch(() => {})
+        alertsSent++
+      }
     }
   }
 

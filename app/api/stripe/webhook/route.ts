@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 const { createClient } = require('@supabase/supabase-js')
 import { stripe } from '@/lib/stripe'
 import Stripe from 'stripe'
+import { sendLoopsTransactional, updateLoopsContact, LOOPS_TX } from '@/lib/loops'
 
 async function setPlan(admin: ReturnType<typeof createClient>, userId: string, plan: 'pro' | 'free', customerId?: string | null) {
   await admin.auth.admin.updateUserById(userId, { user_metadata: { plan } })
@@ -66,6 +67,14 @@ export async function POST(request: Request) {
         const user = users.find((u: { email: string }) => u.email === customer.email)
         if (user) {
           await setPlan(admin, user.id, 'free')
+          await updateLoopsContact(customer.email, { plan: 'free' }).catch(() => {})
+          // Email de fin d'abonnement
+          if (LOOPS_TX.SUBSCRIPTION_END) {
+            const { data: profil } = await admin.from('etablissements').select('nom_gerant').eq('user_id', user.id).single()
+            await sendLoopsTransactional(customer.email, LOOPS_TX.SUBSCRIPTION_END, {
+              firstName: profil?.nom_gerant || '',
+            }).catch(() => {})
+          }
         }
       }
     }

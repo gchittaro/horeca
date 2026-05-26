@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server'
-import { createLoopsContact, deleteLoopsContact, updateLoopsContact } from '@/lib/loops'
+import { createLoopsContact, deleteLoopsContact, updateLoopsContact, sendLoopsTransactional, LOOPS_TX } from '@/lib/loops'
 
-// POST — créer ou mettre à jour un contact
+// POST — créer un contact + envoyer l'email de bienvenue Free
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { email, firstName, plan, typeEtablissement, region, nomEtablissement } = body
     if (!email) return NextResponse.json({ error: 'Email requis' }, { status: 400 })
     const result = await createLoopsContact({ email, firstName, plan, typeEtablissement, region, nomEtablissement })
+    // Email de bienvenue Free (non bloquant)
+    if (LOOPS_TX.WELCOME_FREE) {
+      sendLoopsTransactional(email, LOOPS_TX.WELCOME_FREE, { firstName: firstName || '' }).catch(() => {})
+    }
     return NextResponse.json(result)
   } catch {
     return NextResponse.json({ error: 'Erreur Loops' }, { status: 500 })
