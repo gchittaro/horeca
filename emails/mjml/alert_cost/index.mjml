@@ -33,7 +33,6 @@
         </mj-text>
 
         <mj-text padding="0 0 16px">
-          Bonjour {{firstName}},<br /><br />
           Les variations de marché cette semaine représentent un surcoût estimé de
           <strong style="color:#A32D2D;">{{impactEstime}}</strong> sur vos achats,
           au-dessus de votre seuil configuré de {{seuilEuros}} €.

@@ -1,0 +1,89 @@
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" />
+      <mj-text font-size="13px" color="#5F5E5A" line-height="1.7" />
+    </mj-attributes>
+    <mj-style>
+      a { color: #534AB7; }
+    </mj-style>
+  </mj-head>
+
+  <mj-body background-color="#F8F8FC">
+
+    <!-- Header -->
+    <mj-section background-color="#26215C" border-radius="12px" padding="24px">
+      <mj-column>
+        <mj-text font-size="18px" font-weight="500" color="#ffffff" padding="0">
+          HoReCa<span style="color:#AFA9EC">.</span>Watch
+        </mj-text>
+        <mj-text font-size="12px" color="#AFA9EC" padding="4px 0 0">
+          Plan Pro activé
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="12px 0 0">
+      <mj-column></mj-column>
+    </mj-section>
+
+    <!-- Corps -->
+    <mj-section background-color="#ffffff" border="0.5px solid #CECBF6" border-radius="12px" padding="24px">
+      <mj-column>
+
+        <mj-text font-size="14px" color="#26215C" padding="0 0 16px">
+          Bonjour {{firstName}},
+        </mj-text>
+
+        <mj-text padding="0 0 16px">
+          Votre abonnement Pro est actif. Vous avez maintenant accès à l'intégralité de la plateforme — dashboard complet, alertes personnalisées et brief chaque lundi.
+        </mj-text>
+
+        <!-- Bloc accès Pro -->
+        <mj-section background-color="#26215C" border-radius="8px" padding="16px">
+          <mj-column>
+            <mj-text font-size="12px" color="#AFA9EC" font-weight="500" padding="0 0 10px">
+              Votre accès Pro inclut
+            </mj-text>
+            <mj-text font-size="12px" color="#D3D1C7" padding="0 0 5px">
+              ✓ &nbsp;18 indicateurs en temps réel (alimentation, boissons, énergie, RH, juridique)
+            </mj-text>
+            <mj-text font-size="12px" color="#D3D1C7" padding="0 0 5px">
+              ✓ &nbsp;Signaux géopolitiques GDELT
+            </mj-text>
+            <mj-text font-size="12px" color="#D3D1C7" padding="0 0 5px">
+              ✓ &nbsp;Impact calculé en € sur vos volumes d'achats
+            </mj-text>
+            <mj-text font-size="12px" color="#D3D1C7" padding="0 0 5px">
+              ✓ &nbsp;Alertes email personnalisées
+            </mj-text>
+            <mj-text font-size="12px" color="#D3D1C7" padding="0">
+              ✓ &nbsp;Brief opérationnel chaque lundi matin
+            </mj-text>
+          </mj-column>
+        </mj-section>
+
+        <mj-text font-size="12px" color="#888780" padding="16px 0 16px">
+          Pensez à renseigner votre établissement et vos volumes d'achats dans votre espace pour que vos alertes soient calculées précisément.
+        </mj-text>
+
+        <mj-button background-color="#26215C" color="#ffffff" font-size="13px" font-weight="500"
+          border-radius="10px" padding="0" inner-padding="13px 24px" href="{{dashboardUrl}}">
+          Accéder à mon dashboard Pro →
+        </mj-button>
+
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section padding="12px 0 8px">
+      <mj-column>
+        <mj-text font-size="11px" color="#888780" align="center" padding="0">
+          <a href="https://horeca.watch" style="color:#534AB7;text-decoration:none;">HoReCa.Watch</a>
+          &nbsp;·&nbsp; Questions ? Répondez à cet email.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+  </mj-body>
+</mjml>

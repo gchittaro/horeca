@@ -1,0 +1,89 @@
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" />
+      <mj-text font-size="13px" color="#5F5E5A" line-height="1.7" />
+    </mj-attributes>
+    <mj-style>
+      a { color: #534AB7; }
+    </mj-style>
+  </mj-head>
+
+  <mj-body background-color="#F8F8FC">
+
+    <!-- Header -->
+    <mj-section background-color="#26215C" border-radius="12px" padding="24px">
+      <mj-column>
+        <mj-text font-size="18px" font-weight="500" color="#ffffff" padding="0">
+          HoReCa<span style="color:#AFA9EC">.</span>Watch
+        </mj-text>
+        <mj-text font-size="12px" color="#AFA9EC" padding="4px 0 0">
+          Signal géopolitique · Anticipation marché
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="12px 0 0">
+      <mj-column></mj-column>
+    </mj-section>
+
+    <!-- Signal -->
+    <mj-section background-color="#ffffff" border="0.5px solid #CECBF6" border-radius="12px" padding="24px">
+      <mj-column>
+
+        <mj-text font-size="14px" color="#26215C" padding="0 0 16px">
+          Un signal susceptible d'impacter vos achats a été détecté.
+        </mj-text>
+
+        <!-- Signal card -->
+        <mj-section background-color="#F0EFF9" border-radius="10px" padding="16px 16px 14px">
+          <mj-column>
+            <mj-text font-size="14px" font-weight="500" color="#26215C" padding="0 0 14px">
+              {{titrSignal}}
+            </mj-text>
+            <mj-text font-size="10px" color="#888780" padding="0 0 2px" text-transform="uppercase" letter-spacing="0.05em">
+              PRODUITS CONCERNÉS
+            </mj-text>
+            <mj-text font-size="12px" color="#534AB7" font-weight="500" padding="0 0 10px">
+              {{produitsLies}}
+            </mj-text>
+            <mj-text font-size="10px" color="#888780" padding="0 0 2px" text-transform="uppercase" letter-spacing="0.05em">
+              HORIZON ESTIMÉ
+            </mj-text>
+            <mj-text font-size="12px" color="#534AB7" font-weight="500" padding="0 0 10px">
+              {{horizon}}
+            </mj-text>
+            <mj-text font-size="10px" color="#888780" padding="0 0 2px" text-transform="uppercase" letter-spacing="0.05em">
+              TENDANCE
+            </mj-text>
+            <mj-text font-size="12px" color="#A32D2D" font-weight="500" padding="0">
+              ↑ Hausse probable
+            </mj-text>
+          </mj-column>
+        </mj-section>
+
+        <mj-text font-size="12px" color="#888780" padding="16px 0 16px">
+          Anticipez en ajustant vos commandes ou en négociant des prix fermes avec vos fournisseurs avant que la hausse se matérialise.
+        </mj-text>
+
+        <mj-button background-color="#26215C" color="#ffffff" font-size="13px" font-weight="500"
+          border-radius="10px" padding="0" inner-padding="13px 24px" href="{{dashboardUrl}}">
+          Voir l'analyse complète →
+        </mj-button>
+
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section padding="12px 0 8px">
+      <mj-column>
+        <mj-text font-size="11px" color="#888780" align="center" padding="0">
+          <a href="https://horeca.watch" style="color:#534AB7;text-decoration:none;">HoReCa.Watch</a>
+          &nbsp;·&nbsp;
+          <a href="{unsubscribe_link}" style="color:#888780;text-decoration:none;">Gérer mes alertes</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+  </mj-body>
+</mjml>
