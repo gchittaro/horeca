@@ -9,6 +9,7 @@ function SignupForm() {
   const searchParams = useSearchParams()
   const isPro = searchParams.get('plan') === 'pro'
 
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -28,17 +29,16 @@ function SignupForm() {
       email,
       password,
       options: {
-        data: { plan: isPro ? 'pro_pending' : 'free' },
+        data: { plan: isPro ? 'pro_pending' : 'free', full_name: fullName.trim() || null },
         emailRedirectTo: `${appUrl}/api/auth/callback`,
       },
     })
     if (error) { setError(error.message); setLoading(false) }
     else {
-      // Créer le contact dans Loops (fire-and-forget)
       fetch('/api/loops/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, plan: isPro ? 'pro_pending' : 'free' }),
+        body: JSON.stringify({ email, firstName: fullName.trim() || undefined, plan: isPro ? 'pro_pending' : 'free' }),
       }).catch(() => {})
       setDone(true)
     }
@@ -72,9 +72,10 @@ function SignupForm() {
 
       <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {[
-          { label: 'Email',                    type: 'email',    value: email,    set: setEmail,    placeholder: 'vous@etablissement.fr' },
-          { label: 'Mot de passe',             type: 'password', value: password, set: setPassword, placeholder: '8 caractères minimum' },
-          { label: 'Confirmer le mot de passe', type: 'password', value: confirm,  set: setConfirm,  placeholder: '••••••••' },
+          { label: 'Nom & prénom',              type: 'text',     value: fullName,  set: setFullName,  placeholder: 'Marie Dupont',            required: true  },
+          { label: 'Email',                     type: 'email',    value: email,     set: setEmail,     placeholder: 'vous@etablissement.fr',   required: true  },
+          { label: 'Mot de passe',              type: 'password', value: password,  set: setPassword,  placeholder: '8 caractères minimum',    required: true  },
+          { label: 'Confirmer le mot de passe', type: 'password', value: confirm,   set: setConfirm,   placeholder: '••••••••',                required: true  },
         ].map(f => (
           <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             <label style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#5F5E5A', fontWeight: 500 }}>{f.label}</label>
@@ -82,7 +83,7 @@ function SignupForm() {
               type={f.type}
               value={f.value}
               onChange={e => f.set(e.target.value)}
-              required
+              required={f.required}
               placeholder={f.placeholder}
               style={{ fontSize: 13, padding: '9px 11px', borderRadius: 8, border: '0.5px solid #CECBF6', background: '#F8F8FC', color: '#26215C', width: '100%', outline: 'none' }}
             />

@@ -69,7 +69,7 @@ export default function ProfilPage() {
         .single()
 
       if (profil) {
-        setNomGerant(profil.nom_gerant || '')
+        setNomGerant(profil.nom_gerant || user.user_metadata?.full_name || '')
         setTelephone(profil.telephone || '')
         setRole(profil.role || '')
         setPlan(profil.plan || user.user_metadata?.plan || 'free')
