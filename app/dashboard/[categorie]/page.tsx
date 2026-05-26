@@ -90,36 +90,38 @@ export default async function CategoriePage({ params }: { params: Promise<{ cate
         </div>
         <div>
           <div style={{ fontSize: 20, fontWeight: 500, color: '#26215C' }}>{label}</div>
-          <div style={{ fontSize: 12, color: '#888780' }}>Indicateurs · Mis à jour le {formatUpdateDate()}</div>
+          <div style={{ fontSize: 12, color: '#888780' }}>{cat === 'geopolitique' ? 'Signaux GDELT' : 'Indicateurs'} · Mis à jour le {formatUpdateDate()}</div>
         </div>
       </div>
 
-      {/* Indicateurs */}
-      {indicateurs.length > 0 ? (
-        <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 18 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C', marginBottom: 14 }}>Indicateurs {label}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {indicateurs.map(ind => (
-              <div key={ind.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 13px', background: '#F8F8FC', borderRadius: 9 }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C' }}>{ind.nom}</div>
-                  <div style={{ fontSize: 11, color: '#888780', marginTop: 2 }}>{ind.source} · {ind.unite}</div>
-                </div>
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
-                  <div style={{ fontSize: 16, fontWeight: 500, color: '#26215C' }}>
-                    {formatValue(Number(ind.valeur), ind.unite)}
+      {/* Indicateurs — masqué pour géopolitique (pas d'indicateurs chiffrés) */}
+      {cat !== 'geopolitique' && (
+        indicateurs.length > 0 ? (
+          <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 18 }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C', marginBottom: 14 }}>Indicateurs {label}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {indicateurs.map(ind => (
+                <div key={ind.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 13px', background: '#F8F8FC', borderRadius: 9 }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C' }}>{ind.nom}</div>
+                    <div style={{ fontSize: 11, color: '#888780', marginTop: 2 }}>{ind.source} · {ind.unite}</div>
                   </div>
-                  <PillVariation pct={Number(ind.variation_pct)} periode={(ind as { periode?: string }).periode} />
+                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+                    <div style={{ fontSize: 16, fontWeight: 500, color: '#26215C' }}>
+                      {formatValue(Number(ind.valeur), ind.unite)}
+                    </div>
+                    <PillVariation pct={Number(ind.variation_pct)} periode={(ind as { periode?: string }).periode} />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 48, textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>📡</div>
-          <div style={{ fontSize: 14, fontWeight: 500, color: '#26215C' }}>Données en cours de collecte</div>
-        </div>
+        ) : (
+          <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 48, textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📡</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: '#26215C' }}>Données en cours de collecte</div>
+          </div>
+        )
       )}
 
       {/* Signaux géopolitiques */}
