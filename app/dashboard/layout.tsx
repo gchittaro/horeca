@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { IconBell, IconUserCircle, IconLock, IconBuildingStore } from '@tabler/icons-react'
 import { formatUpdateDate } from '@/lib/utils'
+import ProOnboardingTip from '@/app/components/ProOnboardingTip'
 
 const navItems = [
   { href: '/dashboard',              label: 'Vue globale',  proOnly: false },
@@ -18,10 +19,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: { user } } = await supabase.auth.getUser()
 
   const { data: planRow } = user
-    ? await supabase.from('etablissements').select('plan').eq('user_id', user.id).single()
+    ? await supabase.from('etablissements').select('plan, vol_cafe, vol_viandes').eq('user_id', user.id).single()
     : { data: null }
   const plan = (planRow?.plan ?? user?.user_metadata?.plan ?? 'free') as string
   const isPro = plan === 'pro' || plan === 'team'
+  const needsOnboarding = isPro && !planRow?.vol_cafe && !planRow?.vol_viandes
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8F8FC', display: 'flex', flexDirection: 'column' }}>
@@ -37,9 +39,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
           <IconBell size={18} color="#AFA9EC" style={{ cursor: 'pointer', flexShrink: 0 }} />
           {isPro && (
-            <Link href="/dashboard/organisation" style={{ lineHeight: 0, flexShrink: 0 }} title="Mon entreprise">
-              <IconBuildingStore size={18} color="#AFA9EC" style={{ cursor: 'pointer' }} />
-            </Link>
+            needsOnboarding
+              ? <ProOnboardingTip />
+              : <Link href="/dashboard/organisation" style={{ lineHeight: 0, flexShrink: 0 }} title="Mon entreprise">
+                  <IconBuildingStore size={18} color="#AFA9EC" style={{ cursor: 'pointer' }} />
+                </Link>
           )}
           <Link href="/profil" style={{ lineHeight: 0, flexShrink: 0 }} title="Mon profil">
             <IconUserCircle size={18} color="#AFA9EC" style={{ cursor: 'pointer' }} />
