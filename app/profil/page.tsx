@@ -40,6 +40,7 @@ export default function ProfilPage() {
   const [userEmail, setUserEmail] = useState('')
   const [nomGerant, setNomGerant] = useState('')
   const [telephone, setTelephone] = useState('')
+  const [role, setRole] = useState('')
   const [alerts, setAlerts] = useState({ surcout: true, geopolitique: true, reglementation: true, pdf: false })
   const [plan, setPlan] = useState('free')
 
@@ -62,13 +63,14 @@ export default function ProfilPage() {
 
       const { data: profil } = await supabase
         .from('etablissements')
-        .select('nom_gerant, telephone, plan, alert_surcout, alert_geopolitique, alert_reglementation, alert_rapport_pdf')
+        .select('nom_gerant, telephone, role, plan, alert_surcout, alert_geopolitique, alert_reglementation, alert_rapport_pdf')
         .eq('user_id', user.id)
         .single()
 
       if (profil) {
         setNomGerant(profil.nom_gerant || '')
         setTelephone(profil.telephone || '')
+        setRole(profil.role || '')
         setPlan(profil.plan || user.user_metadata?.plan || 'free')
         setAlerts({
           surcout:        profil.alert_surcout        ?? true,
@@ -101,6 +103,7 @@ export default function ProfilPage() {
         user_id: user.id,
         nom_gerant: nomGerant || null,
         telephone: telephone || null,
+        role: role || null,
         alert_surcout: alerts.surcout,
         alert_geopolitique: alerts.geopolitique,
         alert_reglementation: alerts.reglementation,
@@ -200,6 +203,36 @@ export default function ProfilPage() {
               <input type="email" value={userEmail} readOnly style={{ ...inputStyle, background: '#F0EFF9', color: '#888780', cursor: 'default' }} />
             </Field>
           </div>
+          <Field label="Mon rôle">
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {[
+                { key: 'directeur', label: '🏨 Directeur' },
+                { key: 'chef',      label: '👨‍🍳 Chef de cuisine' },
+                { key: 'acheteur',  label: '🛒 Acheteur' },
+                { key: 'daf',       label: '💼 DAF / Comptable' },
+                { key: 'rh',        label: '👥 RH' },
+              ].map(r => (
+                <button
+                  key={r.key}
+                  type="button"
+                  onClick={() => setRole(r.key)}
+                  style={{
+                    fontSize: 12,
+                    padding: '6px 14px',
+                    borderRadius: 20,
+                    border: '0.5px solid',
+                    borderColor: role === r.key ? '#534AB7' : '#CECBF6',
+                    background: role === r.key ? '#EEEDFE' : '#F8F8FC',
+                    color: role === r.key ? '#26215C' : '#888780',
+                    cursor: 'pointer',
+                    fontWeight: role === r.key ? 500 : 400,
+                  }}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          </Field>
         </div>
 
         {/* Alertes */}
