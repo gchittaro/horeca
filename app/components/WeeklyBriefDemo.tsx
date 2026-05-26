@@ -85,7 +85,7 @@ const briefs: Record<string, string[]> = {
 }
 
 const avantages = [
-  { Icon: IconBrain,         title: 'Brief IA chaque lundi',          desc: 'Adapté à votre rôle, basé sur les données réelles de la semaine.' },
+  { Icon: IconBrain,         title: 'Brief chaque lundi',             desc: 'Adapté à votre rôle, basé sur les données réelles de la semaine.' },
   { Icon: IconChartLine,     title: 'Dashboard complet',               desc: '18 indicateurs en temps réel + signaux géopolitiques + archives 12 mois.' },
   { Icon: IconBuildingStore, title: 'Impact sur votre établissement',  desc: 'Calcul personnalisé en euros selon vos volumes d\'achats réels.' },
   { Icon: IconBell,          title: 'Alertes personnalisées',          desc: 'Notifié dès qu\'un indicateur dépasse votre seuil d\'impact défini.' },
@@ -108,7 +108,7 @@ export default function WeeklyBriefDemo({ loggedIn = false, isPro = false }: { l
             Ce que vous recevez chaque lundi matin
           </div>
           <div style={{ fontSize: 14, color: '#AFA9EC', lineHeight: 1.7, maxWidth: 520, margin: '0 auto' }}>
-            Un brief opérationnel généré par IA, adapté à votre rôle, basé sur les données de marché de la semaine.
+            Un brief opérationnel adapté à votre rôle, basé sur les données de marché de la semaine.
           </div>
         </div>
 
