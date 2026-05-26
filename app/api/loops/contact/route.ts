@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     const result = await createLoopsContact({ email, firstName, plan, typeEtablissement, region, nomEtablissement })
     // Email de bienvenue Free (non bloquant)
     if (LOOPS_TX.WELCOME_FREE) {
-      sendLoopsTransactional(email, LOOPS_TX.WELCOME_FREE, { firstName: firstName || '' }).catch(() => {})
+      sendLoopsTransactional(email, LOOPS_TX.WELCOME_FREE, { prenom: firstName || '' }).catch(() => {})
     }
     return NextResponse.json(result)
   } catch {

@@ -71,7 +71,7 @@ export async function GET(request: Request) {
           if (LOOPS_TX.PRO_CONFIRM) {
             const { data: profil } = await admin2.from('etablissements').select('nom_gerant').eq('user_id', userId).single()
             await sendLoopsTransactional(authUser.email, LOOPS_TX.PRO_CONFIRM, {
-              firstName: profil?.nom_gerant || '',
+              prenom: profil?.nom_gerant || '',
               dashboardUrl: 'https://horeca.watch/dashboard',
             }).catch(() => {})
           }

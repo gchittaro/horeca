@@ -72,7 +72,7 @@ export async function POST(request: Request) {
           if (LOOPS_TX.SUBSCRIPTION_END) {
             const { data: profil } = await admin.from('etablissements').select('nom_gerant').eq('user_id', user.id).single()
             await sendLoopsTransactional(customer.email, LOOPS_TX.SUBSCRIPTION_END, {
-              firstName: profil?.nom_gerant || '',
+              prenom: profil?.nom_gerant || '',
             }).catch(() => {})
           }
         }
