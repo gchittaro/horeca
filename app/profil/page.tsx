@@ -46,6 +46,7 @@ export default function ProfilPage() {
 
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [loggingOut, setLoggingOut] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -96,10 +97,11 @@ export default function ProfilPage() {
 
   async function handleSave() {
     setSaving(true)
+    setSaveError('')
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      await supabase.from('etablissements').upsert({
+      const { error } = await supabase.from('etablissements').upsert({
         user_id: user.id,
         nom_gerant: nomGerant || null,
         telephone: telephone || null,
@@ -110,6 +112,13 @@ export default function ProfilPage() {
         alert_rapport_pdf: alerts.pdf,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' })
+
+      if (error) {
+        console.error('[profil/save]', error)
+        setSaveError(error.message)
+        setSaving(false)
+        return
+      }
 
       fetch('/api/loops/contact', {
         method: 'PUT',
@@ -268,6 +277,11 @@ export default function ProfilPage() {
         >
           {saving ? 'Enregistrement…' : saved ? '✓ Profil enregistré' : 'Enregistrer mon profil'}
         </button>
+        {saveError && (
+          <div style={{ fontSize: 12, color: '#A32D2D', background: '#FCEBEB', padding: '9px 12px', borderRadius: 8 }}>
+            Erreur : {saveError}
+          </div>
+        )}
 
         {(plan === 'pro' || plan === 'team') && (
           <button
