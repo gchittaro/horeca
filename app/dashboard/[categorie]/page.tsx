@@ -25,12 +25,29 @@ function formatValue(valeur: number, unite: string): string {
   return num
 }
 
-function PillVariation({ pct }: { pct: number }) {
-  if (pct === 0) return <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: '#EEEDFE', color: '#3C3489' }}>= stable</span>
+const periodeLabel: Record<string, string> = {
+  hebdo:    'vs sem. préc.',
+  mensuel:  'vs mois préc.',
+  annuel:   'vs an préc.',
+  trimestr: 'vs trim. préc.',
+  semestr:  'vs sem. préc.',
+}
+
+function PillVariation({ pct, periode }: { pct: number; periode?: string }) {
+  const label = periode ? periodeLabel[periode] ?? periode : 'vs sem. préc.'
+  if (pct === 0) return (
+    <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: '#EEEDFE', color: '#3C3489' }}>= stable</span>
+      <span style={{ fontSize: 9, color: '#B0AED6' }}>{label}</span>
+    </span>
+  )
   const up = pct > 0
   return (
-    <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: up ? '#FCEBEB' : '#EAF3DE', color: up ? '#A32D2D' : '#3B6D11' }}>
-      {up ? '↑ +' : '↓ '}{Math.abs(pct).toFixed(1)}%
+    <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: up ? '#FCEBEB' : '#EAF3DE', color: up ? '#A32D2D' : '#3B6D11' }}>
+        {up ? '↑ +' : '↓ '}{Math.abs(pct).toFixed(1)}%
+      </span>
+      <span style={{ fontSize: 9, color: '#B0AED6' }}>{label}</span>
     </span>
   )
 }
@@ -92,7 +109,7 @@ export default async function CategoriePage({ params }: { params: Promise<{ cate
                   <div style={{ fontSize: 16, fontWeight: 500, color: '#26215C' }}>
                     {formatValue(Number(ind.valeur), ind.unite)}
                   </div>
-                  <PillVariation pct={Number(ind.variation_pct)} />
+                  <PillVariation pct={Number(ind.variation_pct)} periode={(ind as { periode?: string }).periode} />
                 </div>
               </div>
             ))}

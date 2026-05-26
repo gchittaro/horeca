@@ -5,12 +5,29 @@ import { mockIndicateurs, mockSignaux, mockAlertes } from '@/lib/mock-data'
 import UpgradeButton from '@/app/components/UpgradeButton'
 import SessionRefresh from '@/app/components/SessionRefresh'
 
-function PillVariation({ pct }: { pct: number }) {
-  if (pct === 0) return <div style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: '#EEEDFE', color: '#3C3489', display: 'inline-block' }}>= stable</div>
+const periodeLabel: Record<string, string> = {
+  hebdo:    'vs sem. préc.',
+  mensuel:  'vs mois préc.',
+  annuel:   'vs an préc.',
+  trimestr: 'vs trim. préc.',
+  semestr:  'vs sem. préc.',
+}
+
+function PillVariation({ pct, periode }: { pct: number; periode?: string }) {
+  const label = periode ? (periodeLabel[periode] ?? periode) : 'vs sem. préc.'
+  if (pct === 0) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+      <div style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: '#EEEDFE', color: '#3C3489', display: 'inline-block' }}>= stable</div>
+      <div style={{ fontSize: 9, color: '#B0AED6' }}>{label}</div>
+    </div>
+  )
   const up = pct > 0
   return (
-    <div style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: up ? '#FCEBEB' : '#EAF3DE', color: up ? '#A32D2D' : '#3B6D11', display: 'inline-block' }}>
-      {up ? '↑ +' : '↓ '}{Math.abs(pct).toFixed(1)}%
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+      <div style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: up ? '#FCEBEB' : '#EAF3DE', color: up ? '#A32D2D' : '#3B6D11', display: 'inline-block' }}>
+        {up ? '↑ +' : '↓ '}{Math.abs(pct).toFixed(1)}%
+      </div>
+      <div style={{ fontSize: 9, color: '#B0AED6' }}>{label}</div>
     </div>
   )
 }
@@ -20,7 +37,7 @@ function AlertBar({ severite }: { severite: string }) {
   return <div style={{ width: 3, height: 36, borderRadius: 2, flexShrink: 0, background: color }} />
 }
 
-type Indicateur = { id: string; nom: string; valeur: number; unite: string; variation_pct: number; source: string; categorie: string }
+type Indicateur = { id: string; nom: string; valeur: number; unite: string; variation_pct: number; source: string; categorie: string; periode?: string }
 type Signal = { id: string; titre: string; description: string; horizon: string; impact: string; positive?: boolean }
 type Alerte = { id: string; titre: string; description: string; severite: string; created_at?: string; time_display?: string }
 
@@ -57,7 +74,7 @@ function IndicateurRow({ ind }: { ind: Indicateur }) {
             ? ind.valeur.toLocaleString('fr-FR') + ' €'
             : ind.valeur.toLocaleString('fr-FR', { minimumFractionDigits: ind.valeur % 1 !== 0 ? 2 : 0 }) + ' €'}
         </div>
-        <PillVariation pct={ind.variation_pct} />
+        <PillVariation pct={ind.variation_pct} periode={ind.periode} />
       </div>
     </div>
   )
