@@ -20,18 +20,45 @@ export async function GET(request: Request) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       )
 
-      // 1. Mettre à jour user_metadata (pour le JWT futur)
+      // 1. Mettre à jour le JWT
       await admin.auth.admin.updateUserById(userId, {
         user_metadata: { plan: 'pro' },
       })
 
-      // 2. Écrire le plan dans etablissements (source de vérité côté DB)
-      await admin.from('etablissements').upsert({
-        user_id: userId,
-        plan: 'pro',
-        stripe_customer_id: session.customer as string | null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' })
+      // 2. Vérifier si une ligne existe déjà
+      const { data: existing } = await admin
+        .from('etablissements')
+        .select('user_id')
+        .eq('user_id', userId)
+        .single()
+
+      if (existing) {
+        // Ligne existante → simple update
+        await admin
+          .from('etablissements')
+          .update({
+            plan: 'pro',
+            stripe_customer_id: session.customer as string | null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', userId)
+      } else {
+        // Nouvelle ligne → insert avec valeurs par défaut
+        await admin
+          .from('etablissements')
+          .insert({
+            user_id: userId,
+            plan: 'pro',
+            stripe_customer_id: session.customer as string | null,
+            type_etablissement: 'Restaurant traditionnel',
+            region: 'Île-de-France',
+            alert_surcout: true,
+            alert_geopolitique: true,
+            alert_reglementation: true,
+            alert_rapport_pdf: false,
+            updated_at: new Date().toISOString(),
+          })
+      }
     }
   } catch (e) {
     console.error('[stripe/success]', e)
