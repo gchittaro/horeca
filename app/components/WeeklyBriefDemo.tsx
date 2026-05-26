@@ -135,7 +135,7 @@ export default function WeeklyBriefDemo() {
 
           {/* Pied */}
           <div style={{ padding: '12px 20px', borderTop: '0.5px solid #3C3489', textAlign: 'center' }}>
-            <div style={{ fontSize: 10, color: '#534AB7', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 10, color: '#7F77DD', lineHeight: 1.5 }}>
               Exemple fictif à titre d&apos;illustration — votre brief est généré chaque lundi à partir des données réelles du marché.
             </div>
           </div>
@@ -172,9 +172,12 @@ export default function WeeklyBriefDemo() {
               display: 'inline-block',
             }}
           >
-            Essayer le plan Pro — 19€/mois
+            Essayer le plan Pro — 99€/mois
           </Link>
-          <div style={{ fontSize: 12, color: '#534AB7' }}>
+          <div style={{ fontSize: 11, color: '#AFA9EC' }}>
+            soit 24,75 € par semaine
+          </div>
+          <div style={{ fontSize: 11, color: '#AFA9EC' }}>
             Sans engagement. Résiliable à tout moment.
           </div>
         </div>
