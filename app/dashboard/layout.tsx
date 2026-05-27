@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { IconBell, IconUserCircle, IconLock, IconBuildingStore } from '@tabler/icons-react'
 import { formatUpdateDate } from '@/lib/utils'
-import ProOnboardingTip from '@/app/components/ProOnboardingTip'
+import OnboardingTip from '@/app/components/OnboardingTip'
 
 const navItems = [
   { href: '/dashboard',              label: 'Vue globale',  proOnly: false },
@@ -19,11 +19,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: { user } } = await supabase.auth.getUser()
 
   const { data: planRow } = user
-    ? await supabase.from('etablissements').select('plan, vol_cafe, vol_viandes').eq('user_id', user.id).single()
+    ? await supabase.from('etablissements').select('plan, vol_cafe, vol_viandes, nom_gerant').eq('user_id', user.id).single()
     : { data: null }
   const plan = (planRow?.plan ?? user?.user_metadata?.plan ?? 'free') as string
   const isPro = plan === 'pro' || plan === 'team'
-  const needsOnboarding = isPro && !planRow?.vol_cafe && !planRow?.vol_viandes
+  const needsOrgSetup = isPro && !planRow?.vol_cafe && !planRow?.vol_viandes
+  const needsProfilSetup = !planRow?.nom_gerant && !user?.user_metadata?.full_name
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8F8FC', display: 'flex', flexDirection: 'column' }}>
@@ -39,15 +40,38 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
           <IconBell size={18} color="#AFA9EC" style={{ cursor: 'pointer', flexShrink: 0 }} />
           {isPro && (
-            needsOnboarding
-              ? <ProOnboardingTip />
+            needsOrgSetup
+              ? <OnboardingTip
+                  storageKey="horeca_tip_org"
+                  href="/dashboard/organisation"
+                  icon={<IconBuildingStore size={18} color="#AFA9EC" style={{ cursor: 'pointer' }} />}
+                  iconActive={<IconBuildingStore size={18} color="#ffffff" style={{ cursor: 'pointer' }} />}
+                  title="Votre organisation"
+                  message="Renseignez vos volumes d'achats et invitez votre équipe pour des alertes calculées précisément."
+                  linkLabel="Configurer mon organisation"
+                  linkIcon={<IconBuildingStore size={13} />}
+                  arrowRight={40}
+                />
               : <Link href="/dashboard/organisation" style={{ lineHeight: 0, flexShrink: 0 }} title="Mon entreprise">
                   <IconBuildingStore size={18} color="#AFA9EC" style={{ cursor: 'pointer' }} />
                 </Link>
           )}
-          <Link href="/profil" style={{ lineHeight: 0, flexShrink: 0 }} title="Mon profil">
-            <IconUserCircle size={18} color="#AFA9EC" style={{ cursor: 'pointer' }} />
-          </Link>
+          {needsProfilSetup
+            ? <OnboardingTip
+                storageKey="horeca_tip_profil"
+                href="/profil"
+                icon={<IconUserCircle size={18} color="#AFA9EC" style={{ cursor: 'pointer' }} />}
+                iconActive={<IconUserCircle size={18} color="#ffffff" style={{ cursor: 'pointer' }} />}
+                title="Votre profil"
+                message="Complétez votre nom et configurez vos alertes personnalisées."
+                linkLabel="Compléter mon profil"
+                linkIcon={<IconUserCircle size={13} />}
+                arrowRight={8}
+              />
+            : <Link href="/profil" style={{ lineHeight: 0, flexShrink: 0 }} title="Mon profil">
+                <IconUserCircle size={18} color="#AFA9EC" style={{ cursor: 'pointer' }} />
+              </Link>
+          }
           <div style={{
             fontSize: 11,
             background: isPro ? '#3C3489' : '#F0EFF9',
