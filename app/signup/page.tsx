@@ -40,7 +40,12 @@ function SignupForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, firstName: fullName.trim() || undefined, plan: isPro ? 'pro_pending' : 'free' }),
       }).catch(() => {})
-      setDone(true)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        window.location.href = '/dashboard'
+      } else {
+        setDone(true)
+      }
     }
   }
 
