@@ -39,6 +39,7 @@ function SignupForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, firstName: fullName.trim() || undefined, plan: isPro ? 'pro_pending' : 'free' }),
+        keepalive: true,
       }).catch(() => {})
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
