@@ -36,23 +36,20 @@
         </mj-text>
 
         <!-- Bloc organisation -->
-        <mj-section background-color="#EEEDFE" border-radius="8px" padding="14px">
-          <mj-column>
-            <mj-text font-size="11px" color="#534AB7" font-weight="500" padding="0 0 3px">
-              Organisation
-            </mj-text>
-            <mj-text font-size="16px" font-weight="500" color="#26215C" padding="0">
-              {{orgName}}
-            </mj-text>
-          </mj-column>
-        </mj-section>
+        <mj-text padding="0">
+          <div style="background:#EEEDFE;border-radius:8px;padding:14px;">
+            <div style="font-size:11px;color:#534AB7;font-weight:500;margin-bottom:3px;">Organisation</div>
+            <div style="font-size:16px;font-weight:500;color:#26215C;">{{orgName}}</div>
+          </div>
+        </mj-text>
 
         <mj-text padding="16px 0 16px">
-          Pour rejoindre l'organisation, créez votre compte HoReCa.Watch avec l'adresse email sur laquelle vous avez reçu ce message ({{inviteEmail}}).
+          Pour rejoindre l'organisation, créez votre compte HoReCa.Watch avec l'adresse email sur laquelle vous avez reçu ce message (<strong>{{inviteEmail}}</strong>).
         </mj-text>
 
         <mj-button background-color="#26215C" color="#ffffff" font-size="13px" font-weight="500"
-          border-radius="10px" padding="0" inner-padding="13px 24px" href="https://horeca.watch?signup=1">
+          border-radius="10px" padding="0" inner-padding="13px 24px"
+          href="https://horeca.watch?signup=1&email={{inviteEmail}}">
           Créer mon compte →
         </mj-button>
 

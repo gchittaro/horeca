@@ -16,7 +16,9 @@ export default function SignupPortal() {
 
   useEffect(() => {
     // Ouvrir automatiquement si ?signup=1 dans l'URL (ex : lien depuis email d'invitation)
-    if (new URLSearchParams(window.location.search).get('signup') === '1') {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('signup') === '1') {
+      if (params.get('email')) setEmail(params.get('email')!)
       setOpen(true)
     }
   }, [])
