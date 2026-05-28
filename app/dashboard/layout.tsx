@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { IconBell, IconUserCircle, IconLock, IconBuildingStore } from '@tabler/icons-react'
 import { formatUpdateDate } from '@/lib/utils'
 import OnboardingTip from '@/app/components/OnboardingTip'
+import ChatAgent from '@/app/components/ChatAgent'
 
 const navItems = [
   { href: '/dashboard',              label: 'Vue globale',  proOnly: false },
@@ -118,6 +119,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div style={{ flex: 1 }}>
         {children}
       </div>
+
+      {isPro && <ChatAgent />}
 
       {/* FOOTER */}
       <div style={{ background: '#26215C', padding: '10px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
