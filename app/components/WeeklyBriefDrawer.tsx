@@ -82,7 +82,7 @@ export default function WeeklyBriefDrawer({ semaine }: { semaine: number }) {
             <IconSparkles size={16} color="#7F77DD" />
             <div>
               <div style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>Brief opérationnel</div>
-              <div style={{ fontSize: 11, color: '#AFA9EC' }}>Semaine {semaine} · Généré par IA</div>
+              <div style={{ fontSize: 11, color: '#AFA9EC' }}>Semaine {semaine}</div>
             </div>
           </div>
           <button
