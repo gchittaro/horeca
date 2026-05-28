@@ -52,7 +52,7 @@
         </mj-text>
 
         <mj-button background-color="#26215C" color="#ffffff" font-size="13px" font-weight="500"
-          border-radius="10px" padding="0" inner-padding="13px 24px" href="https://horeca.watch/signup">
+          border-radius="10px" padding="0" inner-padding="13px 24px" href="https://horeca.watch?signup=1">
           Créer mon compte →
         </mj-button>
 
