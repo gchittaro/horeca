@@ -1,12 +1,15 @@
 import Link from 'next/link'
 import {
   IconChartLine, IconWorld, IconBolt, IconScale,
-  IconBuildingStore, IconBell, IconCheck, IconLock,
+  IconBuildingStore, IconBell,
 } from '@tabler/icons-react'
 import { createClient } from '@/lib/supabase/server'
 import { tickerItems } from '@/lib/mock-data'
-import ProCTA from '@/app/components/ProCTA'
 import WeeklyBriefDemo from '@/app/components/WeeklyBriefDemo'
+import SignupPortal from '@/app/components/SignupPortal'
+import NavSignupButton from '@/app/components/NavSignupButton'
+import HeroEmailCapture from '@/app/components/HeroEmailCapture'
+import PricingSection from '@/app/components/PricingSection'
 
 const features = [
   { Icon: IconChartLine,    title: 'Prix matières premières', desc: '18 indicateurs clés actualisés depuis FranceAgriMer, Matif, ICE.' },
@@ -47,24 +50,6 @@ const sigIconStyle: Record<string, { bg: string; color: string }> = {
   legal: { bg: '#26215C', color: '#AFA9EC' },
 }
 
-const planFeatFree = [
-  { text: 'Newsletter hebdo marché CHR',              locked: false },
-  { text: '3 indicateurs Food (café, bœuf, farine)',  locked: false },
-  { text: 'Dashboard complet',                        locked: true  },
-  { text: 'Signaux géopolitiques',                    locked: true  },
-  { text: 'Alertes personnalisées',                   locked: true  },
-]
-
-const planFeatPro = [
-  { text: 'Dashboard complet — 18 indicateurs' },
-  { text: 'Veille Légifrance CHR (lois, décrets, JO)' },
-  { text: 'Signaux géopolitiques GDELT' },
-  { text: 'Profil établissement personnalisé' },
-  { text: 'Alertes email calculées pour vos volumes' },
-  { text: 'Export CSV / PDF hebdo' },
-  { text: 'Support prioritaire' },
-]
-
 export default async function HomePage() {
   const doubled = [...tickerItems, ...tickerItems]
 
@@ -95,13 +80,11 @@ export default async function HomePage() {
             </Link>
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 10, flexShrink: 0, alignItems: 'center' }}>
             <Link href="/login" style={{ fontSize: 13, color: '#D3D1C7', padding: '7px 16px', borderRadius: 8, border: '1px solid #3C3489', textDecoration: 'none', fontWeight: 500 }}>
               Se connecter
             </Link>
-            <Link href="/signup" style={{ fontSize: 13, background: '#fff', color: '#26215C', padding: '7px 16px', borderRadius: 8, fontWeight: 500, textDecoration: 'none' }}>
-              S&apos;inscrire
-            </Link>
+            <NavSignupButton label="Essai gratuit" />
           </div>
         )}
       </nav>
@@ -119,27 +102,22 @@ export default async function HomePage() {
           <p style={{ fontSize: 15, color: '#D3D1C7', lineHeight: 1.7, maxWidth: 500 }}>
             Prix matières premières, signaux géopolitiques, alertes réglementation — tout ce dont vous avez besoin pour anticiper, pas subir.
           </p>
-          <div className="home-hero-buttons" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 6 }}>
-            {user ? (
-              <>
-                <Link href="/dashboard" style={{ background: '#fff', color: '#26215C', fontSize: 14, fontWeight: 500, padding: '12px 24px', borderRadius: 8, textDecoration: 'none', display: 'inline-block' }}>
-                  Voir le dashboard
-                </Link>
-                <Link href="/profil" style={{ background: 'transparent', color: '#fff', fontSize: 14, padding: '12px 24px', borderRadius: 8, border: '1px solid #AFA9EC', textDecoration: 'none', display: 'inline-block' }}>
-                  Mon compte
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/signup" style={{ background: '#fff', color: '#26215C', fontSize: 14, fontWeight: 500, padding: '12px 24px', borderRadius: 8, textDecoration: 'none', display: 'inline-block' }}>
-                  Essai gratuit
-                </Link>
-                <Link href="/login" style={{ background: 'transparent', color: '#fff', fontSize: 14, padding: '12px 24px', borderRadius: 8, border: '1px solid #AFA9EC', textDecoration: 'none', display: 'inline-block' }}>
-                  Se connecter
-                </Link>
-              </>
-            )}
-          </div>
+
+          {user ? (
+            <div className="home-hero-buttons" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 6 }}>
+              <Link href="/dashboard" style={{ background: '#fff', color: '#26215C', fontSize: 14, fontWeight: 500, padding: '12px 24px', borderRadius: 8, textDecoration: 'none', display: 'inline-block' }}>
+                Voir le dashboard
+              </Link>
+              <Link href="/profil" style={{ background: 'transparent', color: '#fff', fontSize: 14, padding: '12px 24px', borderRadius: 8, border: '1px solid #AFA9EC', textDecoration: 'none', display: 'inline-block' }}>
+                Mon compte
+              </Link>
+            </div>
+          ) : (
+            <div style={{ marginTop: 6 }}>
+              <HeroEmailCapture />
+            </div>
+          )}
+
           <div className="home-hero-stats" style={{ display: 'flex', gap: 40, marginTop: 16, paddingTop: 20, borderTop: '0.5px solid #3C3489', flexWrap: 'wrap' }}>
             {[
               { val: '18',      label: 'Indicateurs suivis' },
@@ -156,7 +134,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* TICKER — nom + variation uniquement, prix masqués */}
+      {/* TICKER */}
       <div style={{ background: '#1F1A4A', padding: '10px 0', overflow: 'hidden', borderBottom: '0.5px solid #3C3489' }}>
         <div className="ticker-track">
           {doubled.map((item, i) => (
@@ -215,62 +193,7 @@ export default async function HomePage() {
       <WeeklyBriefDemo loggedIn={loggedIn} isPro={isPro} />
 
       {/* PRICING */}
-      <section id="pricing" className="home-section" style={{ padding: '48px 32px' }}>
-        <div style={{ maxWidth: 680, margin: '0 auto 24px' }}>
-          <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#534AB7', marginBottom: 8, fontWeight: 500 }}>Tarifs</div>
-          <div style={{ fontSize: 24, fontWeight: 500, color: '#26215C', letterSpacing: '-0.02em' }}>Simple, sans engagement</div>
-        </div>
-        <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(220px, 340px))', gap: 14, maxWidth: 720, margin: '0 auto', justifyContent: 'center' }}>
-
-          {/* Plan Gratuit */}
-          <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 14, padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ fontSize: 15, fontWeight: 500, color: '#26215C' }}>Gratuit</div>
-            <div style={{ fontSize: 32, fontWeight: 500, color: '#26215C' }}>0 €<span style={{ fontSize: 14, color: '#888780', fontWeight: 400 }}> /mois</span></div>
-            <div style={{ fontSize: 12, color: '#5F5E5A', lineHeight: 1.5, paddingTop: 10, borderTop: '0.5px solid #E8E7F4' }}>Pour découvrir HoReCa.Watch et rester informé des grandes tendances.</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-              {planFeatFree.map(f => (
-                <div key={f.text} style={{ fontSize: 12, color: f.locked ? '#B4B2A9' : '#26215C', display: 'flex', alignItems: 'flex-start', gap: 7, lineHeight: 1.5 }}>
-                  {f.locked
-                    ? <IconLock size={13} color="#D3D1C7" style={{ flexShrink: 0, marginTop: 1 }} />
-                    : <IconCheck size={13} color="#26215C" style={{ flexShrink: 0, marginTop: 1 }} />}
-                  {f.text}
-                </div>
-              ))}
-            </div>
-            {loggedIn ? (
-              <Link href="/dashboard" style={{ fontSize: 13, fontWeight: 500, textAlign: 'center', padding: 11, borderRadius: 9, background: 'transparent', color: '#26215C', border: '1px solid #26215C', textDecoration: 'none', display: 'block' }}>
-                Accéder au dashboard
-              </Link>
-            ) : (
-              <Link href="/signup" style={{ fontSize: 13, fontWeight: 500, textAlign: 'center', padding: 11, borderRadius: 9, background: 'transparent', color: '#26215C', border: '1px solid #26215C', textDecoration: 'none', display: 'block' }}>
-                Commencer gratuitement
-              </Link>
-            )}
-          </div>
-
-          {/* Plan Pro */}
-          <div style={{ background: '#26215C', border: '2px solid #26215C', borderRadius: 14, padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ fontSize: 15, fontWeight: 500, color: '#fff' }}>Pro</div>
-            <div style={{ fontSize: 32, fontWeight: 500, color: '#fff' }}>99 €<span style={{ fontSize: 14, color: '#AFA9EC', fontWeight: 400 }}> /mois</span></div>
-            <div style={{ fontSize: 12, color: '#AFA9EC', lineHeight: 1.5, paddingTop: 10, borderTop: '0.5px solid #3C3489' }}>Pour les professionnels qui veulent anticiper et protéger leurs marges.</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-              {planFeatPro.map(f => (
-                <div key={f.text} style={{ fontSize: 12, color: '#D3D1C7', display: 'flex', alignItems: 'flex-start', gap: 7, lineHeight: 1.5 }}>
-                  <IconCheck size={13} color="#7F77DD" style={{ flexShrink: 0, marginTop: 1 }} />
-                  {f.text}
-                </div>
-              ))}
-            </div>
-            {isPro ? (
-              <Link href="/dashboard" style={{ fontSize: 13, fontWeight: 500, textAlign: 'center', padding: 11, borderRadius: 9, background: '#fff', color: '#26215C', textDecoration: 'none', display: 'block' }}>
-                Accéder au dashboard
-              </Link>
-            ) : (
-              <ProCTA loggedIn={loggedIn} label="Démarrer" style={{ fontSize: 13, fontWeight: 500, textAlign: 'center', padding: 11, borderRadius: 9, background: '#fff', color: '#26215C', display: 'block', width: '100%' }} />
-            )}
-          </div>
-        </div>
-      </section>
+      <PricingSection loggedIn={loggedIn} isPro={isPro} />
 
       {/* FOOTER */}
       <footer style={{ background: '#26215C', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
@@ -283,6 +206,9 @@ export default async function HomePage() {
           ))}
         </div>
       </footer>
+
+      {/* Popup d'inscription */}
+      <SignupPortal />
     </>
   )
 }

@@ -1,27 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function ProCTA({
   loggedIn,
   label = 'Démarrer',
+  nbUsers = 1,
   style,
 }: {
   loggedIn: boolean
   label?: string
+  nbUsers?: number
   style?: React.CSSProperties
 }) {
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
   async function handleClick() {
     if (!loggedIn) {
-      router.push('/signup?plan=pro')
+      window.dispatchEvent(new CustomEvent('open-signup'))
       return
     }
     setLoading(true)
-    const res = await fetch('/api/stripe/checkout', { method: 'POST' })
+    const res = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nbUsers }),
+    })
     const { url } = await res.json()
     if (url) window.location.href = url
     else setLoading(false)

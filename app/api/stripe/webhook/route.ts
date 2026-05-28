@@ -5,7 +5,14 @@ import { stripe } from '@/lib/stripe'
 import Stripe from 'stripe'
 import { sendLoopsTransactional, updateLoopsContact, LOOPS_TX } from '@/lib/loops'
 
-async function setPlan(admin: ReturnType<typeof createClient>, userId: string, plan: 'pro' | 'free', customerId?: string | null) {
+async function setPlan(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  plan: 'pro' | 'free',
+  customerId?: string | null,
+  subscriptionId?: string | null,
+  maxUsers?: number,
+) {
   await admin.auth.admin.updateUserById(userId, { user_metadata: { plan } })
 
   const { data: existing } = await admin
@@ -17,12 +24,16 @@ async function setPlan(admin: ReturnType<typeof createClient>, userId: string, p
   if (existing) {
     const patch: Record<string, unknown> = { plan, updated_at: new Date().toISOString() }
     if (customerId) patch.stripe_customer_id = customerId
+    if (subscriptionId) patch.stripe_subscription_id = subscriptionId
+    if (maxUsers !== undefined) patch.max_users = maxUsers
     await admin.from('etablissements').update(patch).eq('user_id', userId)
   } else if (plan === 'pro') {
     await admin.from('etablissements').insert({
       user_id: userId,
       plan: 'pro',
       stripe_customer_id: customerId ?? null,
+      stripe_subscription_id: subscriptionId ?? null,
+      max_users: maxUsers ?? 1,
       type_etablissement: 'Restaurant traditionnel',
       region: 'Île-de-France',
       alert_surcout: true,
@@ -54,8 +65,34 @@ export async function POST(request: Request) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session
       const userId = (session.metadata?.userId || session.client_reference_id) as string | null
+      const nbUsers = parseInt(session.metadata?.nb_users || '1', 10)
       if (userId) {
-        await setPlan(admin, userId, 'pro', session.customer as string | null)
+        await setPlan(
+          admin, userId, 'pro',
+          session.customer as string | null,
+          session.subscription as string | null,
+          nbUsers,
+        )
+        // Email de bienvenue Pro
+        if (LOOPS_TX.PRO_CONFIRM && session.customer_email) {
+          await sendLoopsTransactional(session.customer_email, LOOPS_TX.PRO_CONFIRM, {}).catch(() => {})
+        }
+      }
+    }
+
+    if (event.type === 'customer.subscription.updated') {
+      const sub = event.data.object as Stripe.Subscription
+      const customerId = sub.customer as string
+      const nbUsers = sub.items.data[0]?.quantity || 1
+      const { data } = await admin
+        .from('etablissements')
+        .select('user_id')
+        .eq('stripe_customer_id', customerId)
+        .single()
+      if (data) {
+        await admin.from('etablissements')
+          .update({ max_users: nbUsers, updated_at: new Date().toISOString() })
+          .eq('user_id', data.user_id)
       }
     }
 
@@ -68,15 +105,18 @@ export async function POST(request: Request) {
         if (user) {
           await setPlan(admin, user.id, 'free')
           await updateLoopsContact(customer.email, { plan: 'free' }).catch(() => {})
-          // Email de fin d'abonnement
           if (LOOPS_TX.SUBSCRIPTION_END) {
-            const { data: profil } = await admin.from('etablissements').select('nom_gerant').eq('user_id', user.id).single()
-            await sendLoopsTransactional(customer.email, LOOPS_TX.SUBSCRIPTION_END, {
-              prenom: profil?.nom_gerant || '',
-            }).catch(() => {})
+            await sendLoopsTransactional(customer.email, LOOPS_TX.SUBSCRIPTION_END, {}).catch(() => {})
           }
         }
       }
+    }
+
+    if (event.type === 'invoice.payment_failed') {
+      const invoice = event.data.object as Stripe.Invoice
+      const customerId = invoice.customer as string
+      console.log('[stripe/webhook] Payment failed for customer:', customerId)
+      // TODO: Create LOOPS_TX.PAYMENT_FAILED template in Loops and send alert email
     }
   } catch (e) {
     console.error('[stripe/webhook]', e)
