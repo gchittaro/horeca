@@ -24,7 +24,7 @@ export default function HeroEmailCapture() {
           onClick={openPopup}
           style={{ background: '#7F77DD', color: '#fff', fontSize: 14, fontWeight: 500, padding: '12px 22px', borderRadius: 8, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
         >
-          Recevoir la veille gratuite
+          Recevoir la veille gratuitement
         </button>
       </div>
       <div style={{ fontSize: 11, color: '#AFA9EC', marginTop: 6 }}>
