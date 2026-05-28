@@ -31,10 +31,6 @@
     <mj-section background-color="#ffffff" border="0.5px solid #CECBF6" border-radius="12px" padding="24px">
       <mj-column>
 
-        <mj-text font-size="14px" color="#26215C" padding="0 0 16px">
-          Bonjour {{prenom}},
-        </mj-text>
-
         <mj-text padding="0 0 16px">
           Votre abonnement Pro est actif. Vous avez maintenant accès à l'intégralité de la plateforme — dashboard complet, alertes personnalisées et brief chaque lundi.
         </mj-text>

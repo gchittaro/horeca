@@ -31,10 +31,6 @@
     <mj-section background-color="#ffffff" border="0.5px solid #CECBF6" border-radius="12px" padding="24px">
       <mj-column>
 
-        <mj-text font-size="14px" color="#26215C" padding="0 0 16px">
-          Bonjour {{prenom}},
-        </mj-text>
-
         <mj-text padding="0 0 16px">
           Votre compte HoReCa.Watch est actif. Vous avez maintenant accès à la veille marché CHR en temps réel — prix des matières premières, signaux géopolitiques et alertes réglementation.
         </mj-text>
