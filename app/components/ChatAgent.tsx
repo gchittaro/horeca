@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { IconMessageCircle, IconX, IconSend, IconRipple } from '@tabler/icons-react'
+import { IconX, IconSend, IconRipple, IconBrain } from '@tabler/icons-react'
 
 const SUGGESTIONS = [
   'Mon fournisseur me demande +9% sur le beurre, c\'est justifié ?',
@@ -77,20 +77,29 @@ export default function ChatAgent() {
   return (
     <>
       {/* Bouton flottant */}
-      <button
-        onClick={() => setOpen(true)}
-        style={{
-          position: 'fixed', bottom: 24, right: 24,
-          width: 52, height: 52, borderRadius: '50%',
-          background: '#26215C', border: '1px solid #3C3489',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', boxShadow: '0 4px 20px rgba(38,33,92,0.35)',
-          zIndex: 200,
-        }}
-        title="Expert CHR"
-      >
-        <IconMessageCircle size={22} color="#AFA9EC" />
-      </button>
+      <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 200 }}>
+        <style>{`
+          @keyframes chr-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(127,119,221,0.5); }
+            70% { box-shadow: 0 0 0 10px rgba(127,119,221,0); }
+            100% { box-shadow: 0 0 0 0 rgba(127,119,221,0); }
+          }
+        `}</style>
+        <button
+          onClick={() => setOpen(true)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: '#26215C', border: '1px solid #534AB7',
+            borderRadius: 28, padding: '11px 18px 11px 14px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(38,33,92,0.4)',
+            animation: 'chr-pulse 2.5s ease-out 1s 3',
+          }}
+        >
+          <IconBrain size={18} color="#7F77DD" />
+          <span style={{ fontSize: 13, fontWeight: 500, color: '#fff', whiteSpace: 'nowrap' }}>Expert CHR</span>
+        </button>
+      </div>
 
       {/* Overlay */}
       {open && (
