@@ -25,19 +25,26 @@ export async function GET() {
   const semaine = getISOWeek(new Date())
   const annee = new Date().getFullYear()
 
+  // 1. Lire le brief pré-généré depuis la DB
+  const { data: cached } = await admin.from('weekly_briefs').select('brief').eq('user_id', user.id).eq('semaine', semaine).eq('annee', annee).single()
+  if (cached?.brief) {
+    return NextResponse.json({ brief: cached.brief, semaine, annee })
+  }
+
+  // 2. Fallback : générer à la demande si le cron n'a pas encore tourné
   const [{ data: profil }, { data: indicateurs }, { data: signaux }] = await Promise.all([
     admin.from('etablissements').select('type_etablissement, region, couverts_par_jour, vol_cafe, vol_viandes, vol_laitiers, vol_farine, vol_huiles, vol_energie').eq('user_id', user.id).single(),
     admin.from('indicateurs').select('nom, valeur, unite, variation_pct, categorie').eq('semaine', semaine).eq('annee', annee).order('variation_pct', { ascending: false }),
-    admin.from('signaux_geopolitiques').select('titre, description, impact, horizon, produits_lies').order('fetched_at', { ascending: false }).limit(3),
+    admin.from('signaux_geopolitiques').select('titre, impact, horizon').order('fetched_at', { ascending: false }).limit(3),
   ])
 
   const volumes = [
-    profil?.vol_cafe     ? `café ${profil.vol_cafe} kg`          : null,
-    profil?.vol_viandes  ? `viandes ${profil.vol_viandes} kg`    : null,
-    profil?.vol_laitiers ? `laitiers ${profil.vol_laitiers} kg`  : null,
-    profil?.vol_farine   ? `farine ${profil.vol_farine} kg`      : null,
-    profil?.vol_huiles   ? `huiles ${profil.vol_huiles} L`       : null,
-    profil?.vol_energie  ? `énergie ${profil.vol_energie} kWh`   : null,
+    profil?.vol_cafe     ? `café ${profil.vol_cafe} kg`         : null,
+    profil?.vol_viandes  ? `viandes ${profil.vol_viandes} kg`   : null,
+    profil?.vol_laitiers ? `laitiers ${profil.vol_laitiers} kg` : null,
+    profil?.vol_farine   ? `farine ${profil.vol_farine} kg`     : null,
+    profil?.vol_huiles   ? `huiles ${profil.vol_huiles} L`      : null,
+    profil?.vol_energie  ? `énergie ${profil.vol_energie} kWh`  : null,
   ].filter(Boolean).join(', ')
 
   const indText = (indicateurs || []).map(i =>
@@ -91,6 +98,10 @@ Style : professionnel, direct, sans jargon inutile. Pas de bullet points, des ph
 
   const data = await res.json()
   const brief: string = data.content?.[0]?.text || ''
+
+  if (brief) {
+    await admin.from('weekly_briefs').upsert({ user_id: user.id, semaine, annee, brief, generated_at: new Date().toISOString() }, { onConflict: 'user_id,semaine,annee' })
+  }
 
   return NextResponse.json({ brief, semaine, annee })
 }

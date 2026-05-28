@@ -107,16 +107,6 @@ export default function WeeklyBriefDrawer({ semaine }: { semaine: number }) {
           ) : null}
         </div>
 
-        {/* Footer */}
-        <div style={{ padding: '12px 20px', borderTop: '0.5px solid #F0EFF9', flexShrink: 0 }}>
-          <button
-            onClick={() => { setFetched(false); setBrief('') }}
-            disabled={loading}
-            style={{ fontSize: 11, color: '#888780', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-          >
-            ↺ Régénérer
-          </button>
-        </div>
       </div>
     </>
   )
