@@ -4,6 +4,7 @@ import { getISOWeek, formatUpdateDate } from '@/lib/utils'
 import { mockIndicateurs, mockSignaux, mockAlertes } from '@/lib/mock-data'
 import UpgradeButton from '@/app/components/UpgradeButton'
 import SessionRefresh from '@/app/components/SessionRefresh'
+import WeeklyBriefDrawer from '@/app/components/WeeklyBriefDrawer'
 
 const periodeLabel: Record<string, string> = {
   hebdo:    'vs sem. préc.',
@@ -142,6 +143,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <div style={{ fontSize: 12, color: '#AFA9EC' }}>Accédez à tous les indicateurs, alertes et signaux géopolitiques.</div>
           </div>
           <UpgradeButton label="Passer Pro — 99 €/mois" style={{ fontSize: 12, background: '#7F77DD', color: '#fff', padding: '8px 18px', borderRadius: 8, fontWeight: 500, whiteSpace: 'nowrap' }} />
+        </div>
+      )}
+
+      {/* BRIEF IA — Pro uniquement */}
+      {isPro && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <WeeklyBriefDrawer semaine={semaine} />
         </div>
       )}
 
