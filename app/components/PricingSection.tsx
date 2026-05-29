@@ -27,12 +27,14 @@ const planFeatPro = [
   'Expert CHR IA — 10 questions/jour',
   'Alertes email personnalisées',
   'Export CSV / PDF',
+  'Newsletter hebdo CHR',
 ]
 
 export default function PricingSection({ loggedIn, isPro }: { loggedIn: boolean; isPro: boolean }) {
   const [nbUsers, setNbUsers] = useState(1)
   const [loading, setLoading] = useState(false)
   const prix = calculerPrixMensuel(nbUsers)
+  const remise = nbUsers > 1 ? Math.round((1 - prix / (nbUsers * 19)) * 100) : 0
 
   async function handleProCTA() {
     if (!loggedIn) {
@@ -126,8 +128,15 @@ export default function PricingSection({ loggedIn, isPro }: { loggedIn: boolean;
 
           {/* Prix */}
           <div>
-            <div style={{ fontSize: 32, fontWeight: 500, color: '#fff' }}>
-              {prix} €<span style={{ fontSize: 14, color: '#AFA9EC', fontWeight: 400 }}> /mois</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <div style={{ fontSize: 32, fontWeight: 500, color: '#fff' }}>
+                {prix} €<span style={{ fontSize: 14, color: '#AFA9EC', fontWeight: 400 }}> /mois</span>
+              </div>
+              {remise > 0 && (
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#1D9E75', background: '#0F2E25', padding: '2px 8px', borderRadius: 20 }}>
+                  −{remise}%
+                </div>
+              )}
             </div>
             {nbUsers > 1 && (
               <div style={{ fontSize: 11, color: '#AFA9EC', marginTop: 3 }}>

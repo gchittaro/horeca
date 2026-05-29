@@ -194,9 +194,7 @@ export default function WeeklyBriefDemo({ loggedIn = false, isPro = false }: { l
         {/* CTA */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
           <ProButton loggedIn={loggedIn} isPro={isPro} />
-          {!isPro && (
-            <div style={{ fontSize: 11, color: '#AFA9EC' }}>soit 24,75 € par semaine</div>
-          )}
+
           <div style={{ fontSize: 11, color: '#AFA9EC' }}>
             Sans engagement. Résiliable à tout moment.
           </div>
