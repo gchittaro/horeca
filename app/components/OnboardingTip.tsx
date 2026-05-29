@@ -16,9 +16,14 @@ interface Props {
   arrowRight?: number
 }
 
-export default function OnboardingTip({ icon, iconActive, href, title, message, linkLabel, linkIcon, arrowRight = 8 }: Props) {
-  const [open, setOpen] = useState(true)
+export default function OnboardingTip({ storageKey, icon, iconActive, href, title, message, linkLabel, linkIcon, arrowRight = 8 }: Props) {
+  const [open, setOpen] = useState(() => !localStorage.getItem(storageKey))
   const ref = useRef<HTMLDivElement>(null)
+
+  function dismiss() {
+    localStorage.setItem(storageKey, '1')
+    setOpen(false)
+  }
 
   if (!open) {
     return (
@@ -30,7 +35,7 @@ export default function OnboardingTip({ icon, iconActive, href, title, message, 
 
   return (
     <div ref={ref} style={{ position: 'relative', lineHeight: 0, flexShrink: 0 }}>
-      <Link href={href} onClick={() => setOpen(false)} style={{ lineHeight: 0 }}>
+      <Link href={href} onClick={dismiss} style={{ lineHeight: 0 }}>
         {iconActive}
       </Link>
 
@@ -60,7 +65,7 @@ export default function OnboardingTip({ icon, iconActive, href, title, message, 
         }} />
 
         <button
-          onClick={() => setOpen(false)}
+          onClick={dismiss}
           style={{ position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 0 }}
           aria-label="Fermer"
         >
@@ -75,7 +80,7 @@ export default function OnboardingTip({ icon, iconActive, href, title, message, 
         </div>
         <Link
           href={href}
-          onClick={() => setOpen(false)}
+          onClick={dismiss}
           style={{ fontSize: 12, fontWeight: 500, color: '#534AB7', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
         >
           {linkIcon}
