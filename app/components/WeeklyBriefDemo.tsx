@@ -33,7 +33,7 @@ function ProButton({ loggedIn, isPro }: { loggedIn: boolean; isPro: boolean }) {
       disabled={loading}
       style={{ fontSize: 15, fontWeight: 500, color: '#fff', background: '#7F77DD', padding: '14px 36px', borderRadius: 10, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
     >
-      {loading ? 'Redirection…' : 'Essayer le plan Pro — 99€/mois'}
+      {loading ? 'Redirection…' : 'Essayer le plan Pro — 19 €/mois'}
     </button>
   )
 }

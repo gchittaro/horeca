@@ -57,7 +57,7 @@ function LockedSection({ label }: { label: string }) {
         <IconLock size={16} color="#534AB7" />
       </div>
       <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C' }}>{label}</div>
-      <UpgradeButton label="Passer Pro — 99 €/mois" style={{ fontSize: 12, background: '#26215C', color: '#fff', padding: '7px 16px', borderRadius: 8, fontWeight: 500 }} />
+      <UpgradeButton label="Passer Pro — 19 €/mois" style={{ fontSize: 12, background: '#26215C', color: '#fff', padding: '7px 16px', borderRadius: 8, fontWeight: 500 }} />
     </div>
   )
 }
@@ -142,7 +142,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <div style={{ fontSize: 13, fontWeight: 500, color: '#fff', marginBottom: 2 }}>Cette section est réservée aux abonnés Pro</div>
             <div style={{ fontSize: 12, color: '#AFA9EC' }}>Accédez à tous les indicateurs, alertes et signaux géopolitiques.</div>
           </div>
-          <UpgradeButton label="Passer Pro — 99 €/mois" style={{ fontSize: 12, background: '#7F77DD', color: '#fff', padding: '8px 18px', borderRadius: 8, fontWeight: 500, whiteSpace: 'nowrap' }} />
+          <UpgradeButton label="Passer Pro — 19 €/mois" style={{ fontSize: 12, background: '#7F77DD', color: '#fff', padding: '8px 18px', borderRadius: 8, fontWeight: 500, whiteSpace: 'nowrap' }} />
         </div>
       )}
 
@@ -265,7 +265,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               Alertes personnalisées · Signaux GDELT · Rapports PDF
             </div>
           </div>
-          <UpgradeButton label="Passer Pro — 99 €/mois" style={{ fontSize: 13, background: '#fff', color: '#26215C', padding: '11px 24px', borderRadius: 9, fontWeight: 600, whiteSpace: 'nowrap' }} />
+          <UpgradeButton label="Passer Pro — 19 €/mois" style={{ fontSize: 13, background: '#fff', color: '#26215C', padding: '11px 24px', borderRadius: 9, fontWeight: 600, whiteSpace: 'nowrap' }} />
         </div>
       )}
     </div>
