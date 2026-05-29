@@ -35,15 +35,7 @@
           Vous avez été invité à rejoindre une équipe sur HoReCa.Watch.
         </mj-text>
 
-        <!-- Bloc organisation -->
-        <mj-text padding="0">
-          <div style="background:#EEEDFE;border-radius:8px;padding:14px;">
-            <div style="font-size:11px;color:#534AB7;font-weight:500;margin-bottom:3px;">Organisation</div>
-            <div style="font-size:16px;font-weight:500;color:#26215C;">{{orgName}}</div>
-          </div>
-        </mj-text>
-
-        <mj-text padding="16px 0 16px">
+        <mj-text padding="0 0 16px">
           Pour rejoindre l'organisation, créez votre compte HoReCa.Watch avec l'adresse email sur laquelle vous avez reçu ce message.
         </mj-text>
 
@@ -65,7 +57,7 @@
       <mj-column>
         <mj-text font-size="11px" color="#888780" align="center" padding="0">
           <a href="https://horeca.watch" style="color:#534AB7;text-decoration:none;">HoReCa.Watch</a>
-          &nbsp;·&nbsp; Vous recevez cet email car vous avez été invité par un membre de {{orgName}}.
+          &nbsp;·&nbsp; Vous recevez cet email car vous avez été invité à rejoindre une organisation.
         </mj-text>
       </mj-column>
     </mj-section>
