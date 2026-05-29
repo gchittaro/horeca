@@ -44,12 +44,12 @@
         </mj-text>
 
         <mj-text padding="16px 0 16px">
-          Pour rejoindre l'organisation, créez votre compte HoReCa.Watch avec l'adresse email sur laquelle vous avez reçu ce message (<strong>{{inviteEmail}}</strong>).
+          Pour rejoindre l'organisation, créez votre compte HoReCa.Watch avec l'adresse email sur laquelle vous avez reçu ce message.
         </mj-text>
 
         <mj-button background-color="#26215C" color="#ffffff" font-size="13px" font-weight="500"
           border-radius="10px" padding="0" inner-padding="13px 24px"
-          href="https://horeca.watch?signup=1&email={{inviteEmail}}">
+          href="{{inviteLink}}">
           Créer mon compte →
         </mj-button>
 
