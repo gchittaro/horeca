@@ -223,15 +223,48 @@ export default function OrganisationPage() {
     await loadData()
   }
 
-  // Étape 1 : ouvrir la modale de confirmation de prix
+  // Étape 1 : vérifier si un siège est disponible ou ouvrir la modale
   function handleInviteClick(e: React.FormEvent) {
     e.preventDefault()
     if (!inviteEmail.trim() || !org) return
     const alreadyInvited = members.some(m => m.invited_email?.toLowerCase() === inviteEmail.trim().toLowerCase())
     if (alreadyInvited) { setOrgError('Cet email a déjà été invité.'); return }
+
+    // Siège disponible → inviter directement sans passer par Stripe
+    if (members.length < maxUsers) {
+      handleDirectInvite(inviteEmail.trim().toLowerCase())
+      return
+    }
+
+    // Plus de sièges → demander confirmation + facturation
     const prixActuel  = calculerPrixMensuel(maxUsers)
     const prixNouveau = calculerPrixMensuel(maxUsers + 1)
     setSeatModal({ email: inviteEmail.trim().toLowerCase(), prixActuel, prixNouveau })
+  }
+
+  // Invitation directe (siège disponible, pas de Stripe)
+  async function handleDirectInvite(email: string) {
+    if (!org) return
+    setInviting(true)
+    setOrgError('')
+    const supabase = createClient()
+    const { error: err } = await supabase.from('organisation_members').insert({
+      org_id: org.id, user_id: null, role: 'member', invited_email: email,
+    })
+    if (err) {
+      setOrgError('Une erreur est survenue lors de l\'invitation.')
+    } else {
+      fetch('/api/loops/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, orgName: org.nom }),
+      }).catch(() => {})
+      setOrgSuccess(`Invitation envoyée à ${email}`)
+      setInviteEmail('')
+      await loadData()
+      setTimeout(() => setOrgSuccess(''), 4000)
+    }
+    setInviting(false)
   }
 
   // Étape 2 : confirmer → mettre à jour Stripe + inviter
@@ -517,11 +550,15 @@ export default function OrganisationPage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 16, fontWeight: 500, color: '#fff', marginBottom: 4 }}>{org.nom}</div>
                   <div style={{ fontSize: 11, color: '#AFA9EC', display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <span>{members.length} membre{members.length > 1 ? 's' : ''}</span>
+                    <span>{members.length} / {maxUsers} siège{maxUsers > 1 ? 's' : ''} utilisé{members.length > 1 ? 's' : ''}</span>
                     <span>·</span>
-                    <span>{maxUsers} siège{maxUsers > 1 ? 's' : ''} · {calculerPrixMensuel(maxUsers)} €/mois</span>
-                    <span>·</span>
-                    <span>Créée le {new Date(org.created_at).toLocaleDateString('fr-FR')}</span>
+                    <span>{calculerPrixMensuel(maxUsers)} €/mois</span>
+                    {members.length < maxUsers && (
+                      <>
+                        <span>·</span>
+                        <span style={{ color: '#1D9E75' }}>{maxUsers - members.length} siège{maxUsers - members.length > 1 ? 's' : ''} disponible{maxUsers - members.length > 1 ? 's' : ''}</span>
+                      </>
+                    )}
                   </div>
                 </div>
                 <button
