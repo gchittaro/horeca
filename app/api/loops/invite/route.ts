@@ -22,9 +22,11 @@ export async function POST(request: Request) {
     inviteLink,
   })
 
-  if (result?.error) {
-    console.error('[loops/invite]', result)
-    return NextResponse.json({ error: result.error }, { status: 500 })
+  console.log('[loops/invite] result:', JSON.stringify(result))
+
+  if (!result?.success) {
+    console.error('[loops/invite] failed:', result)
+    return NextResponse.json({ error: result?.message ?? result?.error ?? 'Erreur Loops inconnue' }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })
