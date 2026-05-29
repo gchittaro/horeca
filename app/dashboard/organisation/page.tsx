@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import {
   IconBuildingStore, IconMail, IconTrash, IconPlus, IconUsers, IconStar,
   IconShoppingCart, IconMeat, IconEgg, IconCoffee, IconWheat, IconDroplet, IconBolt,
-  IconAlertTriangle,
+  IconAlertTriangle, IconRefresh,
 } from '@tabler/icons-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -105,6 +105,7 @@ export default function OrganisationPage() {
   // Modale confirmation siège
   const [seatModal, setSeatModal] = useState<{ email: string; prixActuel: number; prixNouveau: number } | null>(null)
   const [seatLoading, setSeatLoading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
 
   // Établissement
   const [nomEtablissement, setNomEtablissement] = useState('')
@@ -143,6 +144,7 @@ export default function OrganisationPage() {
 
     if (profil) {
       setNomEtablissement(profil.nom_etablissement || '')
+      if (!orgData) setOrgName(profil.nom_etablissement || '')
       setSiret(profil.siret || '')
       setAdresse(profil.adresse || '')
       setVille(profil.ville || '')
@@ -290,6 +292,14 @@ export default function OrganisationPage() {
     }).catch(() => {})
     setMaxUsers(newMax)
     setMembers(prev => prev.filter(m => m.id !== memberId))
+  }
+
+  async function handleSyncSeats() {
+    setSyncing(true)
+    const res = await fetch('/api/stripe/sync-seats', { method: 'POST' })
+    const data = await res.json()
+    if (data.max_users) setMaxUsers(data.max_users)
+    setSyncing(false)
   }
 
   const volFields: { key: keyof Volumes; label: string; Icon: React.ElementType }[] = [
@@ -479,23 +489,23 @@ export default function OrganisationPage() {
         <>
           {!org ? (
             <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 24 }}>
-              <div style={{ fontSize: 14, fontWeight: 500, color: '#26215C', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <IconBuildingStore size={16} color="#534AB7" /> Créer votre organisation
+              <div style={{ fontSize: 14, fontWeight: 500, color: '#26215C', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <IconUsers size={16} color="#534AB7" /> Nommer votre équipe
               </div>
-              <div style={{ fontSize: 13, color: '#5F5E5A', marginBottom: 18, lineHeight: 1.6 }}>
-                Créez votre organisation pour inviter des collaborateurs et centraliser la veille pour votre groupe.
+              <div style={{ fontSize: 12, color: '#888780', marginBottom: 14, lineHeight: 1.5 }}>
+                Donnez un nom à votre équipe pour commencer à inviter des collaborateurs.
               </div>
               <form onSubmit={handleCreateOrg} style={{ display: 'flex', gap: 10 }}>
                 <input
                   type="text" value={orgName} onChange={e => setOrgName(e.target.value)}
-                  placeholder="Nom de votre groupe ou entreprise" required
+                  placeholder="ex : Groupe Dupont, Hôtel du Parc…" required
                   style={{ flex: 1, fontSize: 13, padding: '10px 12px', borderRadius: 8, border: '0.5px solid #CECBF6', background: '#F8F8FC', color: '#26215C', outline: 'none' }}
                 />
                 <button
                   type="submit" disabled={creating || !orgName.trim()}
                   style={{ fontSize: 13, fontWeight: 500, background: '#26215C', color: '#fff', padding: '10px 20px', borderRadius: 8, border: 'none', cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.7 : 1, whiteSpace: 'nowrap' }}
                 >
-                  {creating ? 'Création…' : 'Créer'}
+                  {creating ? 'Création…' : 'Créer l\'équipe'}
                 </button>
               </form>
               {orgError && <div style={{ fontSize: 12, color: '#A32D2D', marginTop: 10 }}>{orgError}</div>}
@@ -504,9 +514,9 @@ export default function OrganisationPage() {
             <>
               {/* Infos org + compteur sièges */}
               <div style={{ background: '#26215C', borderRadius: 13, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 16, fontWeight: 500, color: '#fff', marginBottom: 4 }}>{org.nom}</div>
-                  <div style={{ fontSize: 11, color: '#AFA9EC', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 11, color: '#AFA9EC', display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
                     <span>{members.length} membre{members.length > 1 ? 's' : ''}</span>
                     <span>·</span>
                     <span>{maxUsers} siège{maxUsers > 1 ? 's' : ''} · {calculerPrixMensuel(maxUsers)} €/mois</span>
@@ -514,10 +524,16 @@ export default function OrganisationPage() {
                     <span>Créée le {new Date(org.created_at).toLocaleDateString('fr-FR')}</span>
                   </div>
                 </div>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#1F1A4A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <IconStar size={18} color="#FAC775" />
-                </div>
+                <button
+                  onClick={handleSyncSeats}
+                  disabled={syncing}
+                  title="Synchroniser les sièges avec Stripe"
+                  style={{ background: '#1F1A4A', border: 'none', borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: syncing ? 'not-allowed' : 'pointer', opacity: syncing ? 0.5 : 1, flexShrink: 0 }}
+                >
+                  <IconRefresh size={15} color="#AFA9EC" style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
+                </button>
               </div>
+              <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
 
               {/* Membres */}
               <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 20 }}>
