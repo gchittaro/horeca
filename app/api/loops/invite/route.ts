@@ -1,24 +1,20 @@
 import { NextResponse } from 'next/server'
-import { sendLoopsTransactional, createLoopsContact, LOOPS_TX } from '@/lib/loops'
+import { sendLoopsEvent, createLoopsContact } from '@/lib/loops'
 
 export async function POST(request: Request) {
   const { email, orgName } = await request.json()
   if (!email || !orgName) {
     return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
   }
-  if (!LOOPS_TX.TEAM_INVITE) {
-    return NextResponse.json({ ok: true, skipped: 'no template id' })
-  }
-
-  // S'assurer que le contact existe dans Loops avant l'envoi transactionnel
-  await createLoopsContact({ email, plan: 'free' }).catch(() => {})
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://horeca.watch'
   const inviteLink = `${appUrl}?signup=1&email=${encodeURIComponent(email)}`
 
-  const result = await sendLoopsTransactional(email, LOOPS_TX.TEAM_INVITE, {
+  // Créer le contact s'il n'existe pas encore
+  await createLoopsContact({ email, plan: 'free' }).catch(() => {})
+
+  const result = await sendLoopsEvent(email, 'team_invite', {
     orgName,
-    inviteEmail: email,
     inviteLink,
   })
 
