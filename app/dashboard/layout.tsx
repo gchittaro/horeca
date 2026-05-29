@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { IconBell, IconUserCircle, IconLock, IconBuildingStore } from '@tabler/icons-react'
 import { formatUpdateDate } from '@/lib/utils'
 import OnboardingTip from '@/app/components/OnboardingTip'
@@ -23,15 +24,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
     ? await supabase.from('etablissements').select('plan, vol_cafe, vol_viandes, nom_gerant').eq('user_id', user.id).single()
     : { data: null }
 
-  // Auto-lier les invitations en attente (utilisateur existant invité dans une org)
+  // Auto-lier les invitations en attente — service role pour bypasser RLS
   if (user?.email) {
-    const { data: pendingInvites } = await supabase
+    const admin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: pendingInvites } = await admin
       .from('organisation_members')
       .select('id')
       .eq('invited_email', user.email.toLowerCase())
       .is('user_id', null)
     if (pendingInvites?.length) {
-      await supabase
+      await admin
         .from('organisation_members')
         .update({ user_id: user.id })
         .eq('invited_email', user.email.toLowerCase())
