@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { sendLoopsTransactional, LOOPS_TX } from '@/lib/loops'
+import { sendLoopsTransactional, createLoopsContact, LOOPS_TX } from '@/lib/loops'
 
 export async function POST(request: Request) {
   const { email, orgName } = await request.json()
@@ -10,14 +10,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, skipped: 'no template id' })
   }
 
+  // S'assurer que le contact existe dans Loops avant l'envoi transactionnel
+  await createLoopsContact({ email, plan: 'free' }).catch(() => {})
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://horeca.watch'
   const inviteLink = `${appUrl}?signup=1&email=${encodeURIComponent(email)}`
 
-  await sendLoopsTransactional(email, LOOPS_TX.TEAM_INVITE, {
+  const result = await sendLoopsTransactional(email, LOOPS_TX.TEAM_INVITE, {
     orgName,
     inviteEmail: email,
     inviteLink,
-  }).catch(() => {})
+  })
+
+  if (result?.error) {
+    console.error('[loops/invite]', result)
+    return NextResponse.json({ error: result.error }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: true })
 }
