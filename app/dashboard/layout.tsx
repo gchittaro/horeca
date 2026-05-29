@@ -22,6 +22,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: planRow } = user
     ? await supabase.from('etablissements').select('plan, vol_cafe, vol_viandes, nom_gerant').eq('user_id', user.id).single()
     : { data: null }
+
+  // Auto-lier les invitations en attente (utilisateur existant invité dans une org)
+  if (user?.email) {
+    const { data: pendingInvites } = await supabase
+      .from('organisation_members')
+      .select('id')
+      .eq('invited_email', user.email.toLowerCase())
+      .is('user_id', null)
+    if (pendingInvites?.length) {
+      await supabase
+        .from('organisation_members')
+        .update({ user_id: user.id })
+        .eq('invited_email', user.email.toLowerCase())
+        .is('user_id', null)
+    }
+  }
+
   const plan = (planRow?.plan ?? user?.user_metadata?.plan ?? 'free') as string
   const isPro = plan === 'pro' || plan === 'team'
   const needsOrgSetup = isPro && !planRow?.vol_cafe && !planRow?.vol_viandes
