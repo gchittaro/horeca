@@ -83,16 +83,19 @@ export async function POST(request: Request) {
     if (event.type === 'customer.subscription.updated') {
       const sub = event.data.object as Stripe.Subscription
       const customerId = sub.customer as string
-      const nbUsers = sub.items.data[0]?.quantity || 1
-      const { data } = await admin
-        .from('etablissements')
-        .select('user_id')
-        .eq('stripe_customer_id', customerId)
-        .single()
-      if (data) {
-        await admin.from('etablissements')
-          .update({ max_users: nbUsers, updated_at: new Date().toISOString() })
-          .eq('user_id', data.user_id)
+      const nbUsers = sub.items.data[0]?.quantity
+      // Ne pas écraser si Stripe renvoie une quantité invalide (événement sans rapport)
+      if (nbUsers && nbUsers >= 1) {
+        const { data } = await admin
+          .from('etablissements')
+          .select('user_id, max_users')
+          .eq('stripe_customer_id', customerId)
+          .single()
+        if (data && nbUsers > (data.max_users ?? 0)) {
+          await admin.from('etablissements')
+            .update({ max_users: nbUsers, updated_at: new Date().toISOString() })
+            .eq('user_id', data.user_id)
+        }
       }
     }
 
