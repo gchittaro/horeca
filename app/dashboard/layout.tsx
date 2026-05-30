@@ -26,6 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Auto-lier les invitations en attente + vérifier appartenance org pro — service role
   let isOrgMemberPro = false
+  let orgMembership: { role: string; nom: string } | null = null
   if (user?.email) {
     const admin = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,12 +48,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
     // Vérifier si le user est membre d'une org pro (owner ou member)
     const { data: membership } = await admin
       .from('organisation_members')
-      .select('organisations(plan)')
+      .select('role, organisations(plan, nom)')
       .eq('user_id', user.id)
       .limit(1)
       .single()
-    const orgPlan = (membership?.organisations as { plan?: string } | null)?.plan
-    if (orgPlan === 'pro' || orgPlan === 'team') isOrgMemberPro = true
+    const org = membership?.organisations as { plan?: string; nom?: string } | null
+    if (org?.plan === 'pro' || org?.plan === 'team') {
+      isOrgMemberPro = true
+      orgMembership = { role: membership?.role ?? 'member', nom: org?.nom ?? '' }
+    }
   }
 
   const plan = (planRow?.plan ?? user?.user_metadata?.plan ?? 'free') as string
@@ -73,7 +77,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
             {formatUpdateDate()}
           </div>
           <IconBell size={18} color="#AFA9EC" style={{ cursor: 'pointer', flexShrink: 0 }} />
-          {isPro && (
+          {isPro && orgMembership?.role === 'member' && (
+            <div style={{ fontSize: 11, color: '#AFA9EC', flexShrink: 0 }}>
+              <span style={{ color: '#534AB7' }}>Organisation</span> · {orgMembership.nom}
+            </div>
+          )}
+          {isPro && orgMembership?.role !== 'member' && (
             needsOrgSetup
               ? <OnboardingTip
                   storageKey="horeca_tip_org"
