@@ -24,12 +24,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     ? await supabase.from('etablissements').select('plan, vol_cafe, vol_viandes, nom_gerant').eq('user_id', user.id).single()
     : { data: null }
 
-  // Auto-lier les invitations en attente — service role pour bypasser RLS
+  // Auto-lier les invitations en attente + vérifier appartenance org pro — service role
+  let isOrgMemberPro = false
   if (user?.email) {
     const admin = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+    // Lier les invitations en attente
     const { data: pendingInvites } = await admin
       .from('organisation_members')
       .select('id')
@@ -42,10 +44,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
         .eq('invited_email', user.email.toLowerCase())
         .is('user_id', null)
     }
+    // Vérifier si le user est membre d'une org pro (owner ou member)
+    const { data: membership } = await admin
+      .from('organisation_members')
+      .select('organisations(plan)')
+      .eq('user_id', user.id)
+      .limit(1)
+      .single()
+    const orgPlan = (membership?.organisations as { plan?: string } | null)?.plan
+    if (orgPlan === 'pro' || orgPlan === 'team') isOrgMemberPro = true
   }
 
   const plan = (planRow?.plan ?? user?.user_metadata?.plan ?? 'free') as string
-  const isPro = plan === 'pro' || plan === 'team'
+  const isPro = plan === 'pro' || plan === 'team' || isOrgMemberPro
   const needsOrgSetup = isPro && !planRow?.vol_cafe && !planRow?.vol_viandes
   const needsProfilSetup = !planRow?.nom_gerant && !user?.user_metadata?.full_name
 
