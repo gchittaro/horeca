@@ -132,6 +132,7 @@ export default function OrganisationPage() {
   const [region,    setRegion]    = useState('Grand Est')
   const [fournisseurs, setFournisseurs] = useState('')
   const [volumes,   setVolumes]   = useState<Volumes>(defaultVolumes)
+  const [seuil,     setSeuil]     = useState(200)
   const [etabSaving, setEtabSaving] = useState(false)
   const [etabSaved,  setEtabSaved]  = useState(false)
 
@@ -176,6 +177,7 @@ export default function OrganisationPage() {
         vol_huiles:   profil.vol_huiles   || 0,
         vol_energie:  profil.vol_energie  || 0,
       })
+      setSeuil(profil.seuil_alerte_euros || 200)
     }
     setLoading(false)
   }
@@ -209,6 +211,7 @@ export default function OrganisationPage() {
         region,
         fournisseurs: fournisseurs || null,
         ...volumes,
+        seuil_alerte_euros: seuil || 200,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' })
     }
@@ -528,6 +531,25 @@ export default function OrganisationPage() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Seuil d'alerte */}
+          <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C' }}>Seuil d&apos;alerte surcoût</div>
+            <div style={{ fontSize: 12, color: '#888780', lineHeight: 1.5 }}>
+              Une alerte email est envoyée à l&apos;équipe dès que l&apos;impact estimé de la semaine dépasse ce montant.
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <input
+                type="number"
+                min={0}
+                step={50}
+                value={seuil}
+                onChange={e => setSeuil(parseInt(e.target.value) || 0)}
+                style={{ ...inputStyle, width: 120, fontWeight: 500, fontSize: 15 }}
+              />
+              <span style={{ fontSize: 13, color: '#534AB7', fontWeight: 500 }}>€ / semaine</span>
+            </div>
           </div>
 
           <button
