@@ -175,8 +175,13 @@ export async function POST(request: Request) {
     }),
   })
 
+  if (!res.ok) {
+    console.error('[chat] Anthropic error:', res.status, await res.text())
+    return NextResponse.json({ error: 'Erreur IA temporaire, réessayez.' }, { status: 502 })
+  }
   const data = await res.json()
   const answer: string = data.content?.[0]?.text || ''
+  if (!answer) return NextResponse.json({ error: 'Réponse vide de l\'IA.' }, { status: 502 })
 
   await admin.rpc('increment_chat_usage', { p_user_id: user.id, p_date: today })
 

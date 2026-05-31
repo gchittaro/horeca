@@ -20,9 +20,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: planRow } = user
-    ? await supabase.from('etablissements').select('plan, vol_cafe, vol_viandes, nom_gerant').eq('user_id', user.id).single()
+  const { data: planRows } = user
+    ? await supabase.from('etablissements').select('plan, vol_cafe, vol_viandes, nom_gerant').eq('user_id', user.id).limit(1)
     : { data: null }
+  const planRow = planRows?.[0] ?? null
 
   // Auto-lier + vérifier appartenance org pro (requêtes séparées, pas de join)
   const orgMembership = user?.email ? await getUserOrgMembership(user.id, user.email) : null

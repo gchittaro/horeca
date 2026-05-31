@@ -15,11 +15,12 @@ async function setPlan(
 ) {
   await admin.auth.admin.updateUserById(userId, { user_metadata: { plan } })
 
-  const { data: existing } = await admin
+  const { data: existingRows } = await admin
     .from('etablissements')
     .select('user_id')
     .eq('user_id', userId)
-    .single()
+    .limit(1)
+  const existing = existingRows?.[0] ?? null
 
   if (existing) {
     const patch: Record<string, unknown> = { plan, updated_at: new Date().toISOString() }
@@ -103,8 +104,8 @@ export async function POST(request: Request) {
       const subscription = event.data.object as Stripe.Subscription
       const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer
       if (customer.email) {
-        const { data: { users } } = await admin.auth.admin.listUsers()
-        const user = users.find((u: { email: string }) => u.email === customer.email)
+        const { data: { users } } = await admin.auth.admin.listUsers({ filters: { email: customer.email } })
+        const user = users?.[0]
         if (user) {
           await setPlan(admin, user.id, 'free')
           await updateLoopsContact(customer.email, { plan: 'free' }).catch(() => {})

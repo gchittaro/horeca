@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const SEMAINE = getISOWeek(new Date())
-const ANNEE   = new Date().getFullYear()
-
 function getISOWeek(date: Date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
@@ -124,6 +121,10 @@ export async function GET(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
+
+  const now = new Date()
+  const SEMAINE = getISOWeek(now)
+  const ANNEE = now.getFullYear()
 
   // 1. Fetch toutes les sources en parallèle
   const [franceagrimer, gdelt, jo, rss_chr, legifrance_chr] = await Promise.all([

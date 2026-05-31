@@ -99,6 +99,10 @@ Style : professionnel, direct, sans jargon inutile. Pas de bullet points, des ph
     }),
   })
 
+  if (!res.ok) {
+    console.error('[weekly-brief] Anthropic error:', res.status)
+    return NextResponse.json({ error: 'Erreur IA temporaire, réessayez.' }, { status: 502 })
+  }
   const data = await res.json()
   const brief: string = data.content?.[0]?.text || ''
 
