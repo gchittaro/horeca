@@ -32,33 +32,14 @@
     <mj-section background-color="#ffffff" border="0.5px solid #CECBF6" border-radius="12px" padding="24px">
       <mj-column>
 
-        <mj-text font-size="14px" color="#26215C" padding="0 0 16px">
-          Bonjour {{firstName}},
-        </mj-text>
-
         <mj-text padding="0 0 16px">
           Votre synthèse de marché pour la semaine {{semaine}} est disponible sur votre dashboard.
           Les prix des matières premières CHR ont évolué — consultez l'analyse complète pour anticiper vos coûts.
         </mj-text>
 
-        <!-- Bloc impact -->
-        <mj-section background-color="#EEEDFE" border-radius="8px" padding="14px" css-class="impact-block">
-          <mj-column>
-            <mj-text font-size="12px" color="#534AB7" font-weight="500" padding="0 0 4px">
-              Impact estimé sur votre établissement
-            </mj-text>
-            <mj-text font-size="20px" font-weight="500" color="#26215C" padding="0 0 2px">
-              {{impactEstime}}
-            </mj-text>
-            <mj-text font-size="11px" color="#888780" padding="0">
-              Calculé sur la base de vos volumes d'achats déclarés
-            </mj-text>
-          </mj-column>
-        </mj-section>
-
         <mj-button background-color="#26215C" color="#ffffff" font-size="13px" font-weight="500"
-          border-radius="10px" padding="20px 0 0" inner-padding="13px 24px" href="{{dashboardUrl}}">
-          Voir les indicateurs de la semaine →
+          border-radius="10px" padding="20px 0 0" inner-padding="13px 24px" href="{{newsletterUrl}}">
+          Voir les variations de la semaine →
         </mj-button>
 
       </mj-column>

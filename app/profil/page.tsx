@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  IconBell, IconUser, IconArrowLeft, IconLogout, IconTrash, IconCreditCard,
+  IconBell, IconUser, IconArrowLeft, IconLogout, IconTrash, IconCreditCard, IconLock,
 } from '@tabler/icons-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -43,6 +43,7 @@ export default function ProfilPage() {
   const [role, setRole] = useState('')
   const [alerts, setAlerts] = useState({ surcout: true, geopolitique: true, reglementation: true, pdf: false })
   const [plan, setPlan] = useState('free')
+  const [isPro, setIsPro] = useState(false)
 
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -89,6 +90,10 @@ export default function ProfilPage() {
         .eq('owner_id', user.id)
         .single()
       setIsOrgOwner(!!orgData)
+
+      // isPro fiable : inclut les membres d'organisation
+      const notifRes = await fetch('/api/notifications').then(r => r.json()).catch(() => null)
+      setIsPro(notifRes?.isPro === true)
 
       setLoadingProfile(false)
     }
@@ -245,29 +250,52 @@ export default function ProfilPage() {
         </div>
 
         {/* Alertes */}
-        <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ background: '#fff', border: `0.5px solid ${isPro ? '#CECBF6' : '#E8E6F8'}`, borderRadius: 13, padding: 20, display: 'flex', flexDirection: 'column', gap: 16, position: 'relative' }}>
           <div style={{ fontSize: 14, fontWeight: 500, color: '#26215C', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <IconBell size={17} color="#534AB7" /> Alertes personnalisées
+            <IconBell size={17} color={isPro ? '#534AB7' : '#B0AED6'} />
+            Alertes personnalisées
+            {!isPro && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#534AB7', background: '#EEEDFE', padding: '2px 8px', borderRadius: 20, marginLeft: 4 }}>
+                <IconLock size={10} /> Plan Pro
+              </span>
+            )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {[
-              { key: 'surcout',        name: 'Surcoût mensuel estimé supérieur à 200 €',         sub: 'Email dès que l\'impact cumulé dépasse votre seuil' },
-              { key: 'geopolitique',   name: 'Signal géopolitique sur un produit que j\'achète',  sub: 'Notification anticipée 4–6 semaines avant la hausse probable' },
-              { key: 'reglementation', name: 'Nouvelle réglementation CHR applicable',            sub: 'Résumé + délai de mise en conformité dès publication au JO' },
-              { key: 'pdf',            name: 'Rapport mensuel personnalisé en PDF',               sub: 'Récapitulatif complet avec impact calculé sur vos achats' },
-            ].map(a => (
-              <div key={a.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 14px', background: '#F8F8FC', border: '0.5px solid #CECBF6', borderRadius: 9 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C' }}>{a.name}</div>
-                  <div style={{ fontSize: 11, color: '#888780', lineHeight: 1.4, marginTop: 2 }}>{a.sub}</div>
-                </div>
-                <Toggle
-                  on={alerts[a.key as keyof typeof alerts]}
-                  onToggle={() => setAlerts(prev => ({ ...prev, [a.key]: !prev[a.key as keyof typeof alerts] }))}
-                />
+          {!isPro ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '8px 0 4px', textAlign: 'center' }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#EEEDFE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <IconLock size={16} color="#534AB7" />
               </div>
-            ))}
-          </div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C' }}>
+                Alertes personnalisées — seuil à définir dans votre organisation — Plan Pro
+              </div>
+              <div style={{ fontSize: 12, color: '#888780', lineHeight: 1.5 }}>
+                Activez les alertes en passant au plan Pro pour être notifié dès que vos coûts dépassent le seuil défini.
+              </div>
+              <a href="/pricing" style={{ fontSize: 12, fontWeight: 600, color: '#534AB7', textDecoration: 'none' }}>
+                Passer au plan Pro →
+              </a>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {[
+                { key: 'surcout',        name: 'Alertes personnalisées - seuil à définir dans votre organisation - Plan Pro', sub: 'Email dès que l\'impact cumulé dépasse votre seuil' },
+                { key: 'geopolitique',   name: 'Signal géopolitique sur un produit que j\'achète',  sub: 'Notification anticipée 4–6 semaines avant la hausse probable' },
+                { key: 'reglementation', name: 'Nouvelle réglementation CHR applicable',            sub: 'Résumé + délai de mise en conformité dès publication au JO' },
+                { key: 'pdf',            name: 'Rapport mensuel personnalisé en PDF',               sub: 'Récapitulatif complet avec impact calculé sur vos achats' },
+              ].map(a => (
+                <div key={a.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 14px', background: '#F8F8FC', border: '0.5px solid #CECBF6', borderRadius: 9 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C' }}>{a.name}</div>
+                    <div style={{ fontSize: 11, color: '#888780', lineHeight: 1.4, marginTop: 2 }}>{a.sub}</div>
+                  </div>
+                  <Toggle
+                    on={alerts[a.key as keyof typeof alerts]}
+                    onToggle={() => setAlerts(prev => ({ ...prev, [a.key]: !prev[a.key as keyof typeof alerts] }))}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <button

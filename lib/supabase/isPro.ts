@@ -1,4 +1,5 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { updateLoopsContact } from '@/lib/loops'
 
 function admin() {
   return createAdminClient(
@@ -36,6 +37,7 @@ export async function getUserOrgMembership(userId: string, userEmail: string): P
   const { data: pending } = await db.from('organisation_members').select('id').eq('invited_email', userEmail.toLowerCase()).is('user_id', null)
   if (pending?.length) {
     await db.from('organisation_members').update({ user_id: userId }).eq('invited_email', userEmail.toLowerCase()).is('user_id', null)
+    updateLoopsContact(userEmail, { plan: 'pro' }).catch(() => {})
   }
 
   const { data: member } = await db.from('organisation_members').select('role, sections, org_id').eq('user_id', userId).limit(1).single()

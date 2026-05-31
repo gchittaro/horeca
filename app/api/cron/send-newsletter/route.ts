@@ -50,30 +50,36 @@ export async function GET(request: Request) {
   const token = newsletterToken(annee, semaine)
   const newsletterUrl = `${appUrl}/newsletter/${annee}-S${semaine}-${token}`
 
-  const topIndicateurs = (indicateurs || []).slice(0, 5).map(i => ({
-    nom: i.nom,
-    valeur: `${i.valeur.toLocaleString('fr-FR')} ${i.unite}`,
-    variation: `${i.variation_pct > 0 ? '+' : ''}${i.variation_pct.toFixed(1)}%`,
-    direction: i.variation_pct > 0 ? 'hausse' : i.variation_pct < 0 ? 'baisse' : 'stable',
-  }))
+  // Variables plates pour le template email Loops
+  const inds = (indicateurs || []).slice(0, 5)
+  const indVars: Record<string, string> = {}
+  for (let i = 0; i < 5; i++) {
+    const ind = inds[i]
+    const n = i + 1
+    indVars[`ind${n}_nom`]       = ind?.nom ?? ''
+    indVars[`ind${n}_valeur`]    = ind ? `${Number(ind.valeur).toLocaleString('fr-FR')} ${ind.unite}` : ''
+    indVars[`ind${n}_variation`] = ind ? `${ind.variation_pct > 0 ? '+' : ''}${Number(ind.variation_pct).toFixed(1)}%` : ''
+    indVars[`ind${n}_couleur`]   = ind ? (ind.variation_pct > 0 ? '#A32D2D' : ind.variation_pct < 0 ? '#3B6D11' : '#534AB7') : '#888780'
+    indVars[`ind${n}_fleche`]    = ind ? (ind.variation_pct > 0 ? '↑' : ind.variation_pct < 0 ? '↓' : '=') : ''
+  }
 
-  const topSignaux = (signaux || []).slice(0, 2).map(s => ({
-    titre: s.titre,
-    description: s.description,
-    zone: s.zone,
-    horizon: s.horizon,
-  }))
+  const sig1 = signaux?.[0]
+  const sig2 = signaux?.[1]
 
   for (const user of users || []) {
     if (!user.email) continue
 
     const loopsRes = await sendLoopsEvent(user.email, 'newsletter_weekly', {
-      semaine,
-      annee,
+      semaine: String(semaine),
+      annee: String(annee),
       newsletterUrl,
-      buttonLabel: 'Voir les variations de la semaine',
-      indicateurs: JSON.stringify(topIndicateurs),
-      signaux: JSON.stringify(topSignaux),
+      ...indVars,
+      sig1_titre:       sig1?.titre ?? '',
+      sig1_description: sig1?.description ?? '',
+      sig1_horizon:     sig1?.horizon ?? '',
+      sig2_titre:       sig2?.titre ?? '',
+      sig2_description: sig2?.description ?? '',
+      sig2_horizon:     sig2?.horizon ?? '',
     })
 
     if (loopsRes.success !== false) { sent++ } else { errors.push(user.email) }

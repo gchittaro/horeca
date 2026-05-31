@@ -10,8 +10,8 @@ export async function POST(request: Request) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://horeca.watch'
   const inviteLink = `${appUrl}?signup=1&email=${encodeURIComponent(email)}`
 
-  // Créer le contact s'il n'existe pas encore
-  await createLoopsContact({ email, plan: 'free' }).catch(() => {})
+  // Créer le contact s'il n'existe pas encore — membre d'une org pro → plan pro
+  await createLoopsContact({ email, plan: 'pro' }).catch(() => {})
 
   const result = await sendLoopsEvent(email, 'team_invite', {
     orgName,
