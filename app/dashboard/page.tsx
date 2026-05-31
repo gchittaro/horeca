@@ -132,7 +132,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       )}
 
       {/* UPGRADE BANNER */}
-      {showUpgradeBanner && (
+      {showUpgradeBanner && !isPro && (
         <div style={{ background: '#26215C', borderRadius: 11, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 500, color: '#fff', marginBottom: 2 }}>Cette section est réservée aux abonnés Pro</div>
