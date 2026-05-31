@@ -20,6 +20,15 @@ export async function getUserIsPro(userId: string): Promise<boolean> {
   return org?.plan === 'pro' || org?.plan === 'team'
 }
 
+// Retourne le user_id de l'établissement à utiliser (owner de l'org si membre, soi-même sinon)
+export async function getEtablissementOwnerId(userId: string): Promise<string> {
+  const db = admin()
+  const { data: member } = await db.from('organisation_members').select('org_id, role').eq('user_id', userId).limit(1).single()
+  if (!member?.org_id || member.role === 'owner') return userId
+  const { data: org } = await db.from('organisations').select('owner_id').eq('id', member.org_id).single()
+  return org?.owner_id ?? userId
+}
+
 export async function getUserOrgMembership(userId: string, userEmail: string): Promise<{ role: string; nom: string; sections: string[] | null } | null> {
   const db = admin()
 

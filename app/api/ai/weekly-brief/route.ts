@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdmin } from '@supabase/supabase-js'
-import { getUserIsPro } from '@/lib/supabase/isPro'
+import { getUserIsPro, getEtablissementOwnerId } from '@/lib/supabase/isPro'
 
 function getISOWeek(date: Date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -17,7 +17,10 @@ export async function GET() {
 
   const admin = createAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-  const isPro = await getUserIsPro(user.id)
+  const [isPro, etabOwnerId] = await Promise.all([
+    getUserIsPro(user.id),
+    getEtablissementOwnerId(user.id),
+  ])
   if (!isPro) {
     return NextResponse.json({ error: 'Réservé aux abonnés Pro' }, { status: 403 })
   }
@@ -25,15 +28,15 @@ export async function GET() {
   const semaine = getISOWeek(new Date())
   const annee = new Date().getFullYear()
 
-  // 1. Lire le brief pré-généré depuis la DB
-  const { data: cached } = await admin.from('weekly_briefs').select('brief').eq('user_id', user.id).eq('semaine', semaine).eq('annee', annee).single()
+  // 1. Lire le brief pré-généré depuis la DB (stocké sur l'établissement de référence)
+  const { data: cached } = await admin.from('weekly_briefs').select('brief').eq('user_id', etabOwnerId).eq('semaine', semaine).eq('annee', annee).single()
   if (cached?.brief) {
     return NextResponse.json({ brief: cached.brief, semaine, annee })
   }
 
   // 2. Fallback : générer à la demande si le cron n'a pas encore tourné
   const [{ data: profil }, { data: indicateurs }, { data: signaux }] = await Promise.all([
-    admin.from('etablissements').select('type_etablissement, region, couverts_par_jour, vol_cafe, vol_viandes, vol_laitiers, vol_farine, vol_huiles, vol_energie').eq('user_id', user.id).single(),
+    admin.from('etablissements').select('type_etablissement, region, couverts_par_jour, vol_cafe, vol_viandes, vol_laitiers, vol_farine, vol_huiles, vol_energie').eq('user_id', etabOwnerId).single(),
     admin.from('indicateurs').select('nom, valeur, unite, variation_pct, categorie').eq('semaine', semaine).eq('annee', annee).order('variation_pct', { ascending: false }),
     admin.from('signaux_geopolitiques').select('titre, impact, horizon').order('fetched_at', { ascending: false }).limit(3),
   ])
@@ -100,7 +103,7 @@ Style : professionnel, direct, sans jargon inutile. Pas de bullet points, des ph
   const brief: string = data.content?.[0]?.text || ''
 
   if (brief) {
-    await admin.from('weekly_briefs').upsert({ user_id: user.id, semaine, annee, brief, generated_at: new Date().toISOString() }, { onConflict: 'user_id,semaine,annee' })
+    await admin.from('weekly_briefs').upsert({ user_id: etabOwnerId, semaine, annee, brief, generated_at: new Date().toISOString() }, { onConflict: 'user_id,semaine,annee' })
   }
 
   return NextResponse.json({ brief, semaine, annee })

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdmin } from '@supabase/supabase-js'
-import { getUserIsPro } from '@/lib/supabase/isPro'
+import { getUserIsPro, getEtablissementOwnerId } from '@/lib/supabase/isPro'
 
 function getISOWeek(date: Date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -125,12 +125,15 @@ export async function POST(request: Request) {
 
   const admin = createAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-  const isPro = await getUserIsPro(user.id)
+  const [isPro, etabOwnerId] = await Promise.all([
+    getUserIsPro(user.id),
+    getEtablissementOwnerId(user.id),
+  ])
   if (!isPro) {
     return NextResponse.json({ error: 'Réservé aux abonnés Pro' }, { status: 403 })
   }
 
-  // Quota journalier
+  // Quota journalier (par user individuel)
   const today = new Date().toISOString().split('T')[0]
   const { data: usage } = await admin.from('chat_usage').select('count').eq('user_id', user.id).eq('date', today).single()
   if (usage && usage.count >= QUOTA) {
@@ -144,7 +147,7 @@ export async function POST(request: Request) {
   const annee = new Date().getFullYear()
 
   const [{ data: etablissement }, { data: indicateurs }, { data: signaux }] = await Promise.all([
-    admin.from('etablissements').select('type_etablissement, region, couverts_par_jour, role, vol_cafe, vol_viandes, vol_laitiers, vol_farine, vol_huiles, vol_energie, fournisseurs').eq('user_id', user.id).single(),
+    admin.from('etablissements').select('type_etablissement, region, couverts_par_jour, role, vol_cafe, vol_viandes, vol_laitiers, vol_farine, vol_huiles, vol_energie, fournisseurs').eq('user_id', etabOwnerId).single(),
     admin.from('indicateurs').select('nom, valeur, unite, variation_pct, source').eq('semaine', semaine).eq('annee', annee),
     admin.from('signaux_geopolitiques').select('titre, description, impact, horizon').order('fetched_at', { ascending: false }).limit(5),
   ])
