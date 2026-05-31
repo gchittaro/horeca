@@ -6,13 +6,20 @@ import { getISOWeek, formatUpdateDate } from '@/lib/utils'
 import { mockIndicateurs, mockSignaux } from '@/lib/mock-data'
 import { IconSalad, IconGlassFull, IconBolt, IconUsers, IconScale, IconWorld, IconAlertTriangle, IconTrendingUp, IconTrendingDown } from '@tabler/icons-react'
 
-const FOOD_IMPACTS = [
-  { key: 'vol_cafe',     nom: 'Café arabica',     variation_pct:  11.2 },
-  { key: 'vol_viandes',  nom: 'Viande bovine',     variation_pct:   4.7 },
-  { key: 'vol_laitiers', nom: 'Produits laitiers', variation_pct:   3.1 },
-  { key: 'vol_huiles',   nom: 'Huile tournesol',   variation_pct:  -2.8 },
-  { key: 'vol_farine',   nom: 'Farine T55',        variation_pct:   0   },
-]
+const CATEGORY_IMPACTS: Partial<Record<Categorie, { key: string; nom: string; variation_pct: number }[]>> = {
+  food: [
+    { key: 'vol_viandes',  nom: 'Viande bovine',     variation_pct:  4.7 },
+    { key: 'vol_laitiers', nom: 'Produits laitiers', variation_pct:  3.1 },
+    { key: 'vol_huiles',   nom: 'Huile tournesol',   variation_pct: -2.8 },
+    { key: 'vol_farine',   nom: 'Farine T55',        variation_pct:  0   },
+  ],
+  boissons: [
+    { key: 'vol_cafe',     nom: 'Café arabica',      variation_pct: 11.2 },
+  ],
+  energie: [
+    { key: 'vol_energie',  nom: 'Électricité & gaz', variation_pct: -6.1 },
+  ],
+}
 
 type Categorie = 'food' | 'boissons' | 'energie' | 'rh' | 'juridique' | 'geopolitique'
 
@@ -76,14 +83,13 @@ export default async function CategoriePage({ params }: { params: Promise<{ cate
   const semaine = getISOWeek(now)
   const annee = now.getFullYear()
 
-  // Bloc impact alimentation — uniquement pour cat=food et utilisateurs pro
-  let foodImpacts: { nom: string; vol: number; variation_pct: number; impact: number }[] = []
-  if (cat === 'food' && user) {
+  // Bloc impact estimé — pour les catégories food, boissons, énergie
+  let catImpacts: { nom: string; vol: number; variation_pct: number; impact: number }[] = []
+  if (CATEGORY_IMPACTS[cat] && user) {
     const admin = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-    // Chercher l'établissement de l'org (owner) dont ce user est membre
     const { data: membership } = await admin
       .from('organisation_members')
       .select('organisations(owner_id)')
@@ -93,11 +99,11 @@ export default async function CategoriePage({ params }: { params: Promise<{ cate
     const ownerId = (membership?.organisations as { owner_id?: string } | null)?.owner_id ?? user.id
     const { data: etab } = await admin
       .from('etablissements')
-      .select('vol_cafe, vol_viandes, vol_laitiers, vol_huiles, vol_farine, plan')
+      .select('vol_cafe, vol_viandes, vol_laitiers, vol_huiles, vol_farine, vol_energie, plan')
       .eq('user_id', ownerId)
       .single()
     if (etab && (etab.plan === 'pro' || etab.plan === 'team')) {
-      foodImpacts = FOOD_IMPACTS
+      catImpacts = (CATEGORY_IMPACTS[cat] ?? [])
         .map(f => ({ nom: f.nom, vol: (etab as Record<string, number>)[f.key] || 0, variation_pct: f.variation_pct, impact: Math.round(((etab as Record<string, number>)[f.key] || 0) * f.variation_pct / 100) }))
         .filter(f => f.vol > 0)
     }
@@ -132,15 +138,15 @@ export default async function CategoriePage({ params }: { params: Promise<{ cate
         </div>
       </div>
 
-      {/* Bloc impact alimentation pro */}
-      {cat === 'food' && foodImpacts.length > 0 && (
+      {/* Bloc impact estimé — food, boissons, énergie */}
+      {catImpacts.length > 0 && (
         <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 18 }}>
           <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
             <IconAlertTriangle size={15} color="#BA7517" />
             Impact estimé sur vos achats — cette semaine
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {foodImpacts.map((f, i) => (
+            {catImpacts.map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', background: '#F8F8FC', borderRadius: 8 }}>
                 <div style={{ fontSize: 12, color: '#26215C' }}>{f.nom} <span style={{ color: '#888780' }}>· {f.vol} kg/mois</span></div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -155,7 +161,7 @@ export default async function CategoriePage({ params }: { params: Promise<{ cate
               </div>
             ))}
             <div style={{ fontSize: 11, color: '#534AB7', fontWeight: 500, textAlign: 'right', marginTop: 4 }}>
-              Impact total : {foodImpacts.reduce((s, f) => s + f.impact, 0) > 0 ? '+' : ''}{foodImpacts.reduce((s, f) => s + f.impact, 0)} € ce mois
+              Impact total : {catImpacts.reduce((s, f) => s + f.impact, 0) > 0 ? '+' : ''}{catImpacts.reduce((s, f) => s + f.impact, 0)} € cette semaine
             </div>
           </div>
         </div>
