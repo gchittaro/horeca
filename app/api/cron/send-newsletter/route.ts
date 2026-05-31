@@ -46,72 +46,34 @@ export async function GET(request: Request) {
   let sent = 0
   const errors: string[] = []
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://horeca.watch'
+  const token = newsletterToken(annee, semaine)
+  const newsletterUrl = `${appUrl}/newsletter/${annee}-S${semaine}-${token}`
+
+  const topIndicateurs = (indicateurs || []).slice(0, 5).map(i => ({
+    nom: i.nom,
+    valeur: `${i.valeur.toLocaleString('fr-FR')} ${i.unite}`,
+    variation: `${i.variation_pct > 0 ? '+' : ''}${i.variation_pct.toFixed(1)}%`,
+    direction: i.variation_pct > 0 ? 'hausse' : i.variation_pct < 0 ? 'baisse' : 'stable',
+  }))
+
+  const topSignaux = (signaux || []).slice(0, 2).map(s => ({
+    titre: s.titre,
+    description: s.description,
+    zone: s.zone,
+    horizon: s.horizon,
+  }))
+
   for (const user of users || []) {
     if (!user.email) continue
 
-    const plan = user.user_metadata?.plan || 'free'
-    const isPro = plan === 'pro' || plan === 'team'
-
-    // Calcul impact pour les Pro (si profil établissement renseigné)
-    let impactBlock = ''
-    if (isPro) {
-      const { data: profil } = await supabase
-        .from('etablissements')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-
-      if (profil && indicateurs) {
-        const mapping: Record<string, number> = {
-          'Café arabica':     profil.vol_cafe     || 0,
-          'Bœuf haché 15%':  profil.vol_viandes  || 0,
-          'Lait entier':      profil.vol_laitiers || 0,
-          'Farine T55':       profil.vol_farine   || 0,
-          'Huile tournesol':  profil.vol_huiles   || 0,
-          'Électricité spot': profil.vol_energie  || 0,
-        }
-        const total = indicateurs.reduce((sum: number, ind: { nom: string; variation_pct: number }) => {
-          const vol = mapping[ind.nom] || 0
-          return sum + Math.round(vol * ind.variation_pct / 100)
-        }, 0)
-        if (total !== 0) {
-          impactBlock = `<p style="background:#EEEDFE;padding:12px;border-radius:8px;margin-top:16px;">
-            <strong>Impact estimé sur votre établissement cette semaine :</strong>
-            <span style="color:${total > 0 ? '#A32D2D' : '#3B6D11'}">${total > 0 ? '+' : ''}${total} €</span>
-          </p>`
-        }
-      }
-    }
-
-    // Préparer les indicateurs pour Loops (top 5 signaux de la semaine)
-    const topIndicateurs = (indicateurs || []).slice(0, 5).map(i => ({
-      nom: i.nom,
-      valeur: `${i.valeur.toLocaleString('fr-FR')} ${i.unite}`,
-      variation: `${i.variation_pct > 0 ? '+' : ''}${i.variation_pct.toFixed(1)}%`,
-      direction: i.variation_pct > 0 ? 'hausse' : i.variation_pct < 0 ? 'baisse' : 'stable',
-    }))
-
-    const topSignaux = (signaux || []).slice(0, 2).map(s => ({
-      titre: s.titre,
-      description: s.description,
-      zone: s.zone,
-      horizon: s.horizon,
-    }))
-
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://horeca.watch'
-    const token = newsletterToken(annee, semaine)
-    const newsletterUrl = `${appUrl}/newsletter/${annee}-S${semaine}-${token}`
-
-    // Déclenche l'événement Loops → le Loop "newsletter_weekly" envoie l'email
     const loopsRes = await sendLoopsEvent(user.email, 'newsletter_weekly', {
       semaine,
       annee,
-      isPro,
-      impactEstime: impactBlock ? impactBlock.match(/[\+\-]?\d+ €/)?.[0] ?? '' : '',
+      newsletterUrl,
+      buttonLabel: 'Voir les variations de la semaine',
       indicateurs: JSON.stringify(topIndicateurs),
       signaux: JSON.stringify(topSignaux),
-      newsletterUrl,
-      dashboardUrl: `${appUrl}/dashboard`,
     })
 
     if (loopsRes.success !== false) { sent++ } else { errors.push(user.email) }
