@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import {
-  IconBuildingStore, IconMail, IconTrash, IconPlus, IconUsers, IconStar,
+  IconBuildingStore, IconMail, IconTrash, IconPlus, IconUsers, IconPencil,
   IconShoppingCart, IconMeat, IconEgg, IconCoffee, IconWheat, IconDroplet, IconBolt,
   IconAlertTriangle, IconRefresh,
 } from '@tabler/icons-react'
@@ -635,7 +635,7 @@ export default function OrganisationPage() {
                                   style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', color: editingMemberId === m.id ? '#26215C' : '#534AB7' }}
                                   title="Modifier les sections"
                                 >
-                                  <IconStar size={14} />
+                                  <IconPencil size={14} />
                                 </button>
                                 <button
                                   onClick={() => handleRemove(m.id, m.role)}
