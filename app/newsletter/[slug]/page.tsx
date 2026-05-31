@@ -28,6 +28,12 @@ const CATEGORIES = [
   { key: 'boissons', label: 'Boissons' },
 ]
 
+const PRO_CATEGORIES = [
+  { key: 'energie',      label: 'Énergie' },
+  { key: 'rh',           label: 'RH' },
+  { key: 'juridique',    label: 'Juridique' },
+]
+
 const EXAMPLE_IMPACTS = [
   { nom: 'Café arabica',      vol: 40,  impact: 45 },
   { nom: 'Viande bovine',     vol: 80,  impact: 38 },
@@ -55,14 +61,21 @@ export default async function NewsletterPage({ params }: { params: Promise<{ slu
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const { data: indicateurs } = await admin
-    .from('indicateurs')
-    .select('id, nom, valeur, unite, variation_pct, source, categorie')
-    .in('categorie', ['food', 'boissons'])
-    .eq('semaine', semaine)
-    .eq('annee', annee)
-    .order('categorie')
-    .order('variation_pct', { ascending: false })
+  const [{ data: indicateurs }, { data: indicateursPro }, { data: signaux }] = await Promise.all([
+    admin.from('indicateurs')
+      .select('id, nom, valeur, unite, variation_pct, source, categorie')
+      .in('categorie', ['food', 'boissons'])
+      .eq('semaine', semaine).eq('annee', annee)
+      .order('categorie').order('variation_pct', { ascending: false }),
+    admin.from('indicateurs')
+      .select('id, nom, valeur, unite, variation_pct, source, categorie')
+      .in('categorie', ['energie', 'rh', 'juridique'])
+      .eq('semaine', semaine).eq('annee', annee)
+      .order('categorie').order('variation_pct', { ascending: false }),
+    admin.from('signaux_geopolitiques')
+      .select('id, titre, description, horizon, impact, zone')
+      .order('fetched_at', { ascending: false }).limit(3),
+  ])
 
   const isCurrent = semaine === currentSemaine && annee === currentAnnee
   const dateLabel = `Semaine ${semaine} · ${annee}`
@@ -192,6 +205,81 @@ export default async function NewsletterPage({ params }: { params: Promise<{ slu
           }}>
             Passer au plan Pro — 19 €/mois →
           </Link>
+        </div>
+
+        {/* SECTIONS PRO VERROUILLÉES */}
+        <div style={{ position: 'relative' }}>
+          {/* Contenu flou */}
+          <div style={{ filter: 'blur(3px)', pointerEvents: 'none', userSelect: 'none', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {PRO_CATEGORIES.map(cat => {
+              const inds = (indicateursPro || []).filter(i => i.categorie === cat.key)
+              return (
+                <div key={cat.key} style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 20 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#26215C', marginBottom: 14 }}>{cat.label}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {(inds.length ? inds : [
+                      { id: '1', nom: '— — — — —', valeur: 0, unite: '€', variation_pct: 2.4, source: '—', categorie: cat.key },
+                      { id: '2', nom: '— — — — — —', valeur: 0, unite: '€', variation_pct: -1.1, source: '—', categorie: cat.key },
+                    ]).map(ind => (
+                      <div key={ind.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#F8F8FC', borderRadius: 9 }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C' }}>{ind.nom}</div>
+                          <div style={{ fontSize: 11, color: '#888780', marginTop: 2 }}>{ind.source}</div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: '#26215C' }}>— —</div>
+                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: ind.variation_pct > 0 ? '#FCEBEB' : '#EAF3DE', color: ind.variation_pct > 0 ? '#A32D2D' : '#3B6D11' }}>
+                            {ind.variation_pct > 0 ? `↑ +${ind.variation_pct.toFixed(1)}%` : `↓ ${ind.variation_pct.toFixed(1)}%`}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* Géopolitique */}
+            <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 20 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#26215C', marginBottom: 14 }}>Géopolitique</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {((signaux || []).length ? signaux! : [
+                  { id: '1', titre: '— — — — — — — — — —', description: '— — — — — — — — — — — — — — — — — — — —', horizon: '4-8 semaines', impact: 'hausse', zone: '—' },
+                  { id: '2', titre: '— — — — — — — — —', description: '— — — — — — — — — — — — — — — — — —', horizon: '2-4 semaines', impact: 'baisse', zone: '—' },
+                ]).map(s => (
+                  <div key={s.id} style={{ background: s.impact === 'baisse' ? '#E1F5EE' : '#EEEDFE', border: `0.5px solid ${s.impact === 'baisse' ? '#9FE1CB' : '#CECBF6'}`, borderRadius: 9, padding: '12px 14px' }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C', marginBottom: 4 }}>{s.titre}</div>
+                    <div style={{ fontSize: 12, color: '#534AB7', lineHeight: 1.5 }}>{s.description}</div>
+                    <div style={{ fontSize: 10, color: '#888780', marginTop: 6 }}>{s.zone} · {s.horizon}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Overlay Pro */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 12, padding: 24, textAlign: 'center',
+          }}>
+            <div style={{ background: 'rgba(248,248,252,0.85)', backdropFilter: 'blur(4px)', borderRadius: 16, padding: '28px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, boxShadow: '0 4px 24px rgba(38,33,92,0.10)' }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#26215C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <IconLock size={20} color="#AFA9EC" />
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#26215C' }}>Énergie, RH, Juridique &amp; Géopolitique</div>
+              <div style={{ fontSize: 13, color: '#534AB7', lineHeight: 1.6, maxWidth: 320 }}>
+                Ces indicateurs sont réservés aux abonnés Pro. Accédez à l'intégralité des données marché CHR chaque semaine.
+              </div>
+              <Link href="/pricing" style={{
+                background: '#26215C', color: '#fff', padding: '11px 24px',
+                borderRadius: 8, fontWeight: 600, fontSize: 13, textDecoration: 'none',
+                display: 'inline-block', marginTop: 4,
+              }}>
+                Passer au plan Pro — 19 €/mois →
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* FOOTER */}
