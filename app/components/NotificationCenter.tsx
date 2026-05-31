@@ -1,11 +1,20 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { IconBell, IconX, IconAlertTriangle, IconNews, IconExternalLink, IconLock } from '@tabler/icons-react'
+import { IconBell, IconX, IconAlertTriangle, IconNews, IconExternalLink, IconLock, IconCheck } from '@tabler/icons-react'
 
 type Alerte = { id: string; titre: string; description: string; severite: string; created_at: string }
 type Newsletter = { label: string; url: string; semaine: number; annee: number }
 type Data = { isPro: boolean; alertes: Alerte[]; newsletters: Newsletter[] }
+
+const LS_KEY = 'horeca_read_alerts'
+
+function loadReadIds(): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(LS_KEY) ?? '[]')) } catch { return new Set() }
+}
+function saveReadIds(ids: Set<string>) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify([...ids])) } catch {}
+}
 
 function severiteColor(s: string) {
   if (s === 'high')   return { bg: '#FCEBEB', color: '#A32D2D', border: '#F5C6C6' }
@@ -23,11 +32,14 @@ function timeAgo(dateStr: string) {
 }
 
 export default function NotificationCenter() {
-  const [open, setOpen]     = useState(false)
-  const [tab, setTab]       = useState<'alertes' | 'newsletters'>('alertes')
-  const [data, setData]     = useState<Data | null>(null)
+  const [open, setOpen]       = useState(false)
+  const [tab, setTab]         = useState<'alertes' | 'newsletters'>('alertes')
+  const [data, setData]       = useState<Data | null>(null)
   const [loading, setLoading] = useState(false)
+  const [readIds, setReadIds] = useState<Set<string>>(new Set())
   const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { setReadIds(loadReadIds()) }, [])
 
   useEffect(() => {
     if (!open || data) return
@@ -38,7 +50,6 @@ export default function NotificationCenter() {
       .catch(() => setLoading(false))
   }, [open, data])
 
-  // Fermer au clic extérieur
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
@@ -47,9 +58,25 @@ export default function NotificationCenter() {
     return () => document.removeEventListener('mousedown', handle)
   }, [open])
 
-  // Badge nombre alertes non lues
-  const alertCount = data?.alertes?.length ?? 0
-  const hasAlert = alertCount > 0 && data?.isPro
+  function markRead(id: string) {
+    setReadIds(prev => {
+      const next = new Set(prev).add(id)
+      saveReadIds(next)
+      return next
+    })
+  }
+
+  function markAllRead() {
+    const all = new Set(data?.alertes?.map(a => a.id) ?? [])
+    setReadIds(prev => {
+      const next = new Set([...prev, ...all])
+      saveReadIds(next)
+      return next
+    })
+  }
+
+  const unreadAlertes = (data?.alertes ?? []).filter(a => !readIds.has(a.id))
+  const hasAlert = unreadAlertes.length > 0 && data?.isPro
 
   return (
     <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
@@ -86,7 +113,6 @@ export default function NotificationCenter() {
 
           {/* Onglets */}
           <div style={{ display: 'flex', borderBottom: '0.5px solid #EEEDFE' }}>
-            {/* Onglet Alertes */}
             <button
               onClick={() => setTab('alertes')}
               style={{
@@ -102,11 +128,10 @@ export default function NotificationCenter() {
               {data && !data.isPro && <IconLock size={10} color="#B0AED6" />}
               {hasAlert && (
                 <span style={{ fontSize: 9, fontWeight: 600, background: '#E24B4A', color: '#fff', padding: '1px 5px', borderRadius: 10 }}>
-                  {alertCount}
+                  {unreadAlertes.length}
                 </span>
               )}
             </button>
-            {/* Onglet Newsletters */}
             <button
               onClick={() => setTab('newsletters')}
               style={{
@@ -148,23 +173,46 @@ export default function NotificationCenter() {
                     Aucune alerte cette semaine.
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                    {data.alertes.map(a => {
-                      const c = severiteColor(a.severite)
-                      return (
-                        <div key={a.id} style={{ padding: '12px 16px', borderBottom: '0.5px solid #F5F4FD' }}>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                            <span style={{ marginTop: 2, width: 8, height: 8, borderRadius: '50%', background: c.color, flexShrink: 0, display: 'inline-block' }} />
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: '#26215C', marginBottom: 3 }}>{a.titre}</div>
-                              <div style={{ fontSize: 11, color: '#534AB7', lineHeight: 1.5 }}>{a.description}</div>
-                              <div style={{ fontSize: 10, color: '#B0AED6', marginTop: 5 }}>{timeAgo(a.created_at)}</div>
+                  <>
+                    {/* Barre "tout marquer comme lu" */}
+                    {unreadAlertes.length > 0 && (
+                      <div style={{ padding: '8px 16px', borderBottom: '0.5px solid #EEEDFE', display: 'flex', justifyContent: 'flex-end' }}>
+                        <button
+                          onClick={markAllRead}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#534AB7', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}
+                        >
+                          <IconCheck size={11} /> Tout marquer comme lu
+                        </button>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                      {data.alertes.map(a => {
+                        const c = severiteColor(a.severite)
+                        const isRead = readIds.has(a.id)
+                        return (
+                          <div key={a.id} style={{ padding: '12px 16px', borderBottom: '0.5px solid #F5F4FD', opacity: isRead ? 0.45 : 1, transition: 'opacity 0.2s' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                              <span style={{ marginTop: 2, width: 8, height: 8, borderRadius: '50%', background: isRead ? '#B0AED6' : c.color, flexShrink: 0, display: 'inline-block' }} />
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: '#26215C', marginBottom: 3 }}>{a.titre}</div>
+                                <div style={{ fontSize: 11, color: '#534AB7', lineHeight: 1.5 }}>{a.description}</div>
+                                <div style={{ fontSize: 10, color: '#B0AED6', marginTop: 5 }}>{timeAgo(a.created_at)}</div>
+                              </div>
+                              {!isRead && (
+                                <button
+                                  onClick={() => markRead(a.id)}
+                                  title="Marquer comme lu"
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, lineHeight: 0, flexShrink: 0, marginTop: 1 }}
+                                >
+                                  <IconCheck size={13} color="#B0AED6" />
+                                </button>
+                              )}
                             </div>
                           </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+                        )
+                      })}
+                    </div>
+                  </>
                 )}
               </>
             )}
