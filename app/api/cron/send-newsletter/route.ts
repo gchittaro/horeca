@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendLoopsEvent } from '@/lib/loops'
+import { newsletterToken } from '@/app/newsletter/[slug]/page'
 
 function getISOWeek(date: Date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -97,6 +98,10 @@ export async function GET(request: Request) {
       horizon: s.horizon,
     }))
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://horeca.watch'
+    const token = newsletterToken(annee, semaine)
+    const newsletterUrl = `${appUrl}/newsletter/${annee}-S${semaine}-${token}`
+
     // Déclenche l'événement Loops → le Loop "newsletter_weekly" envoie l'email
     const loopsRes = await sendLoopsEvent(user.email, 'newsletter_weekly', {
       semaine,
@@ -105,7 +110,8 @@ export async function GET(request: Request) {
       impactEstime: impactBlock ? impactBlock.match(/[\+\-]?\d+ €/)?.[0] ?? '' : '',
       indicateurs: JSON.stringify(topIndicateurs),
       signaux: JSON.stringify(topSignaux),
-      dashboardUrl: 'https://horeca.watch/dashboard',
+      newsletterUrl,
+      dashboardUrl: `${appUrl}/dashboard`,
     })
 
     if (loopsRes.success !== false) { sent++ } else { errors.push(user.email) }
