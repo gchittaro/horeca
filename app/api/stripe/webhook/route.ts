@@ -92,7 +92,7 @@ export async function POST(request: Request) {
           .select('user_id, max_users')
           .eq('stripe_customer_id', customerId)
           .single()
-        if (data && nbUsers > (data.max_users ?? 0)) {
+        if (data && nbUsers !== (data.max_users ?? 0)) {
           await admin.from('etablissements')
             .update({ max_users: nbUsers, updated_at: new Date().toISOString() })
             .eq('user_id', data.user_id)
