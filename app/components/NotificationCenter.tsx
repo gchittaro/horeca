@@ -86,30 +86,40 @@ export default function NotificationCenter() {
 
           {/* Onglets */}
           <div style={{ display: 'flex', borderBottom: '0.5px solid #EEEDFE' }}>
-            {[
-              { key: 'alertes',     label: 'Alertes',     icon: <IconAlertTriangle size={13} /> },
-              { key: 'newsletters', label: 'Newsletters',  icon: <IconNews size={13} /> },
-            ].map(t => (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key as 'alertes' | 'newsletters')}
-                style={{
-                  flex: 1, padding: '10px 0', fontSize: 12, fontWeight: tab === t.key ? 600 : 400,
-                  color: tab === t.key ? '#26215C' : '#888780',
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  borderBottom: tab === t.key ? '2px solid #26215C' : '2px solid transparent',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                  transition: 'color 0.15s',
-                }}
-              >
-                {t.icon} {t.label}
-                {t.key === 'alertes' && hasAlert && (
-                  <span style={{ fontSize: 9, fontWeight: 600, background: '#E24B4A', color: '#fff', padding: '1px 5px', borderRadius: 10 }}>
-                    {alertCount}
-                  </span>
-                )}
-              </button>
-            ))}
+            {/* Onglet Alertes */}
+            <button
+              onClick={() => setTab('alertes')}
+              style={{
+                flex: 1, padding: '10px 0', fontSize: 12, fontWeight: tab === 'alertes' ? 600 : 400,
+                color: tab === 'alertes' ? '#26215C' : '#888780',
+                background: 'none', border: 'none', cursor: 'pointer',
+                borderBottom: tab === 'alertes' ? '2px solid #26215C' : '2px solid transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                transition: 'color 0.15s',
+              }}
+            >
+              <IconAlertTriangle size={13} /> Alertes
+              {data && !data.isPro && <IconLock size={10} color="#B0AED6" />}
+              {hasAlert && (
+                <span style={{ fontSize: 9, fontWeight: 600, background: '#E24B4A', color: '#fff', padding: '1px 5px', borderRadius: 10 }}>
+                  {alertCount}
+                </span>
+              )}
+            </button>
+            {/* Onglet Newsletters */}
+            <button
+              onClick={() => setTab('newsletters')}
+              style={{
+                flex: 1, padding: '10px 0', fontSize: 12, fontWeight: tab === 'newsletters' ? 600 : 400,
+                color: tab === 'newsletters' ? '#26215C' : '#888780',
+                background: 'none', border: 'none', cursor: 'pointer',
+                borderBottom: tab === 'newsletters' ? '2px solid #26215C' : '2px solid transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                transition: 'color 0.15s',
+              }}
+            >
+              <IconNews size={13} /> Newsletters
+            </button>
           </div>
 
           {/* Contenu */}
