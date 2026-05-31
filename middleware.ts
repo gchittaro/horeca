@@ -1,4 +1,5 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createClient as createAdmin } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
@@ -31,16 +32,34 @@ export async function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith('/dashboard/')) {
-    // Lire le plan depuis etablissements (session user + RLS) — fiable sans service role
-    const { data: planRow } = await supabase
-      .from('etablissements')
-      .select('plan')
-      .eq('user_id', user.id)
-      .single()
+    const admin = createAdmin(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
-    const plan = (planRow?.plan ?? user.user_metadata?.plan ?? 'free') as string
+    // Check plan direct d'abord
+    const plan = (user.user_metadata?.plan ?? 'free') as string
+    let isPro = plan === 'pro' || plan === 'team'
 
-    if (plan !== 'pro' && plan !== 'team') {
+    // Sinon vérifier appartenance org pro
+    if (!isPro) {
+      const { data: member } = await admin
+        .from('organisation_members')
+        .select('org_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single()
+      if (member?.org_id) {
+        const { data: org } = await admin
+          .from('organisations')
+          .select('plan')
+          .eq('id', member.org_id)
+          .single()
+        isPro = org?.plan === 'pro' || org?.plan === 'team'
+      }
+    }
+
+    if (!isPro) {
       const dashUrl = new URL('/dashboard', request.url)
       dashUrl.searchParams.set('upgrade', '1')
       return NextResponse.redirect(dashUrl)
