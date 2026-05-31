@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { getUserIsPro } from '@/lib/supabase/isPro'
 import { getISOWeek, formatUpdateDate } from '@/lib/utils'
 import { mockIndicateurs, mockSignaux } from '@/lib/mock-data'
 import { IconSalad, IconGlassFull, IconBolt, IconUsers, IconScale, IconWorld, IconAlertTriangle, IconTrendingUp, IconTrendingDown } from '@tabler/icons-react'

@@ -1,5 +1,6 @@
 import { IconWorld, IconRipple, IconCheck, IconLock } from '@tabler/icons-react'
 import { createClient } from '@/lib/supabase/server'
+import { getUserIsPro } from '@/lib/supabase/isPro'
 import { getISOWeek, formatUpdateDate } from '@/lib/utils'
 import { mockIndicateurs, mockSignaux, mockAlertes } from '@/lib/mock-data'
 import UpgradeButton from '@/app/components/UpgradeButton'
@@ -89,12 +90,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Lire le plan depuis la DB (source de vérité) — jamais depuis le JWT
-  const { data: planRow } = user
-    ? await supabase.from('etablissements').select('plan').eq('user_id', user.id).single()
-    : { data: null }
-  const plan = (planRow?.plan ?? user?.user_metadata?.plan ?? 'free') as string
-  const isPro = plan === 'pro' || plan === 'team'
+  const isPro = user ? await getUserIsPro(user.id) : false
 
   const now = new Date()
   const semaine = getISOWeek(now)
