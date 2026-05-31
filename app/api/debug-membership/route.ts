@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdmin } from '@supabase/supabase-js'
+import { getUserOrgMembership, getUserIsPro } from '@/lib/supabase/isPro'
 
 export async function GET() {
   const supabase = await createClient()
@@ -23,6 +24,11 @@ export async function GET() {
     orgErr = res.error
   }
 
+  const [orgMembership, isPro] = await Promise.all([
+    getUserOrgMembership(user.id, user.email ?? '').catch((e: Error) => ({ error: e.message })),
+    getUserIsPro(user.id).catch((e: Error) => ({ error: e.message })),
+  ])
+
   return NextResponse.json({
     userId: user.id,
     email: user.email,
@@ -33,5 +39,7 @@ export async function GET() {
     org: org ?? null,
     orgErr: orgErr?.message ?? null,
     serviceRoleKeyPresent: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    orgMembership,
+    isPro,
   })
 }
