@@ -26,7 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Auto-lier les invitations en attente + vérifier appartenance org pro — service role
   let isOrgMemberPro = false
-  let orgMembership: { role: string; nom: string } | null = null
+  let orgMembership: { role: string; nom: string; sections: string[] | null } | null = null
   if (user?.email) {
     const admin = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,14 +48,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     // Vérifier si le user est membre d'une org pro (owner ou member)
     const { data: membership } = await admin
       .from('organisation_members')
-      .select('role, organisations(plan, nom)')
+      .select('role, sections, organisations(plan, nom)')
       .eq('user_id', user.id)
       .limit(1)
       .single()
     const org = membership?.organisations as { plan?: string; nom?: string } | null
     if (org?.plan === 'pro' || org?.plan === 'team') {
       isOrgMemberPro = true
-      orgMembership = { role: membership?.role ?? 'member', nom: org?.nom ?? '' }
+      orgMembership = { role: membership?.role ?? 'member', nom: org?.nom ?? '', sections: membership?.sections ?? null }
     }
   }
 
@@ -132,6 +132,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* SUBNAV — données uniquement */}
       <div className="subnav-inner scrollbar-none" style={{ background: '#1F1A4A', padding: '0 24px', display: 'flex', gap: 0, borderBottom: '0.5px solid #3C3489', overflowX: 'auto' }}>
         {navItems.map(item => {
+          const sectionKey = item.href.replace('/dashboard/', '')
+          const isMember = orgMembership?.role === 'member'
+          // Pour les membres : masquer les sections non autorisées
+          if (isMember && item.proOnly) {
+            const allowed = orgMembership?.sections ?? null
+            if (allowed && !allowed.includes(sectionKey)) return null
+          }
           const locked = item.proOnly && !isPro
           return (
             <Link

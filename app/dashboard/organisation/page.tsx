@@ -48,8 +48,18 @@ function calculerPrixMensuel(nbUsers: number): number {
   return Math.round(prixParUser * nbUsers)
 }
 
+const SECTIONS = [
+  { key: 'food',         label: 'Alimentation' },
+  { key: 'boissons',     label: 'Boissons' },
+  { key: 'energie',      label: 'Énergie' },
+  { key: 'rh',           label: 'RH' },
+  { key: 'juridique',    label: 'Juridique' },
+  { key: 'geopolitique', label: 'Géopolitique' },
+]
+const ALL_SECTIONS = SECTIONS.map(s => s.key)
+
 type Org    = { id: string; nom: string; plan: string; created_at: string }
-type Member = { id: string; user_id: string | null; role: string; invited_email: string | null; joined_at: string }
+type Member = { id: string; user_id: string | null; role: string; invited_email: string | null; joined_at: string; sections: string[] | null }
 
 function Badge({ role }: { role: string }) {
   const isOwner = role === 'owner'
@@ -101,6 +111,9 @@ export default function OrganisationPage() {
   const [inviting,    setInviting]    = useState(false)
   const [orgError,    setOrgError]    = useState('')
   const [orgSuccess,  setOrgSuccess]  = useState('')
+  const [inviteSections, setInviteSections] = useState<string[]>(ALL_SECTIONS)
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null)
+  const [editSections,    setEditSections]    = useState<string[]>([])
 
   // Modale confirmation siège
   const [seatModal, setSeatModal] = useState<{ email: string; prixActuel: number; prixNouveau: number } | null>(null)
@@ -250,6 +263,7 @@ export default function OrganisationPage() {
     const supabase = createClient()
     const { error: err } = await supabase.from('organisation_members').insert({
       org_id: org.id, user_id: null, role: 'member', invited_email: email,
+      sections: inviteSections,
     })
     if (err) {
       setOrgError('Une erreur est survenue lors de l\'invitation.')
@@ -261,6 +275,7 @@ export default function OrganisationPage() {
       }).catch(() => {})
       setOrgSuccess(`Invitation envoyée à ${email}`)
       setInviteEmail('')
+      setInviteSections(ALL_SECTIONS)
       await loadData()
       setTimeout(() => setOrgSuccess(''), 4000)
     }
@@ -294,6 +309,7 @@ export default function OrganisationPage() {
     const { error: err } = await supabase.from('organisation_members').insert({
       org_id: org.id, user_id: null, role: 'member',
       invited_email: seatModal.email,
+      sections: inviteSections,
     })
     if (err) {
       setOrgError('Une erreur est survenue lors de l\'invitation.')
@@ -310,6 +326,13 @@ export default function OrganisationPage() {
     }
     setSeatLoading(false)
     setSeatModal(null)
+  }
+
+  async function handleUpdateSections(memberId: string) {
+    const supabase = createClient()
+    await supabase.from('organisation_members').update({ sections: editSections }).eq('id', memberId)
+    setMembers(prev => prev.map(m => m.id === memberId ? { ...m, sections: editSections } : m))
+    setEditingMemberId(null)
   }
 
   async function handleRemove(memberId: string, memberRole: string) {
@@ -584,35 +607,77 @@ export default function OrganisationPage() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {members.map(m => (
-                      <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', background: '#F8F8FC', border: '0.5px solid #CECBF6', borderRadius: 9, gap: 12 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: '50%', background: m.role === 'owner' ? '#26215C' : '#EEEDFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: m.role === 'owner' ? '#AFA9EC' : '#534AB7' }}>
-                              {(m.invited_email ?? '?')[0].toUpperCase()}
-                            </span>
-                          </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {m.invited_email ?? '—'}
-                              {m.invited_email?.toLowerCase() === userEmail.toLowerCase() && (
-                                <span style={{ fontSize: 10, color: '#888780', marginLeft: 6 }}>(vous)</span>
-                              )}
+                      <div key={m.id} style={{ background: '#F8F8FC', border: '0.5px solid #CECBF6', borderRadius: 9, padding: '11px 14px' }}>
+                        {/* Ligne principale */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: m.role === 'owner' ? '#26215C' : '#EEEDFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <span style={{ fontSize: 13, fontWeight: 600, color: m.role === 'owner' ? '#AFA9EC' : '#534AB7' }}>
+                                {(m.invited_email ?? '?')[0].toUpperCase()}
+                              </span>
                             </div>
-                            <StatusDot active={m.user_id !== null} />
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {m.invited_email ?? '—'}
+                                {m.invited_email?.toLowerCase() === userEmail.toLowerCase() && (
+                                  <span style={{ fontSize: 10, color: '#888780', marginLeft: 6 }}>(vous)</span>
+                                )}
+                              </div>
+                              <StatusDot active={m.user_id !== null} />
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                            <Badge role={m.role} />
+                            {m.role !== 'owner' && (
+                              <>
+                                <button
+                                  onClick={() => { setEditingMemberId(editingMemberId === m.id ? null : m.id); setEditSections(m.sections ?? ALL_SECTIONS) }}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', color: editingMemberId === m.id ? '#26215C' : '#534AB7' }}
+                                  title="Modifier les sections"
+                                >
+                                  <IconStar size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleRemove(m.id, m.role)}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', color: '#C06060' }}
+                                  title="Retirer ce membre"
+                                >
+                                  <IconTrash size={14} />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                          <Badge role={m.role} />
-                          {m.role !== 'owner' && (
-                            <button
-                              onClick={() => handleRemove(m.id, m.role)}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', color: '#C06060' }}
-                              title="Retirer ce membre"
-                            >
-                              <IconTrash size={14} />
-                            </button>
-                          )}
-                        </div>
+
+                        {/* Sections */}
+                        {m.role !== 'owner' && (
+                          editingMemberId === m.id ? (
+                            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '0.5px solid #EEEDFE' }}>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                                {SECTIONS.map(s => {
+                                  const checked = editSections.includes(s.key)
+                                  return (
+                                    <label key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: checked ? '#26215C' : '#888780', background: checked ? '#EEEDFE' : '#fff', border: `0.5px solid ${checked ? '#AFA9EC' : '#CECBF6'}`, borderRadius: 20, padding: '3px 9px', cursor: 'pointer', userSelect: 'none' }}>
+                                      <input type="checkbox" checked={checked} onChange={() => setEditSections(prev => checked ? prev.filter(k => k !== s.key) : [...prev, s.key])} style={{ display: 'none' }} />
+                                      {s.label}
+                                    </label>
+                                  )
+                                })}
+                              </div>
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button onClick={() => handleUpdateSections(m.id)} style={{ fontSize: 12, background: '#534AB7', color: '#fff', padding: '5px 14px', borderRadius: 7, border: 'none', cursor: 'pointer' }}>Enregistrer</button>
+                                <button onClick={() => setEditingMemberId(null)} style={{ fontSize: 12, background: 'none', color: '#888780', padding: '5px 10px', borderRadius: 7, border: '0.5px solid #CECBF6', cursor: 'pointer' }}>Annuler</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                              {(m.sections ?? ALL_SECTIONS).map(k => {
+                                const s = SECTIONS.find(s => s.key === k)
+                                return s ? <span key={k} style={{ fontSize: 10, color: '#534AB7', background: '#EEEDFE', padding: '2px 8px', borderRadius: 20 }}>{s.label}</span> : null
+                              })}
+                            </div>
+                          )
+                        )}
                       </div>
                     ))}
                   </div>
@@ -627,22 +692,42 @@ export default function OrganisationPage() {
                 <div style={{ fontSize: 12, color: '#888780', marginBottom: 14, lineHeight: 1.5 }}>
                   L&apos;ajout d&apos;un siège sera facturé immédiatement au prorata sur votre prochaine facture Stripe.
                 </div>
-                <form onSubmit={handleInviteClick} style={{ display: 'flex', gap: 10 }}>
-                  <div style={{ position: 'relative', flex: 1 }}>
-                    <IconMail size={14} color="#888780" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
-                    <input
-                      type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
-                      placeholder="collaborateur@etablissement.fr" required
-                      style={{ fontSize: 13, padding: '10px 12px 10px 32px', borderRadius: 8, border: '0.5px solid #CECBF6', background: '#F8F8FC', color: '#26215C', outline: 'none', width: '100%' }}
-                    />
+                <form onSubmit={handleInviteClick} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <IconMail size={14} color="#888780" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+                      <input
+                        type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
+                        placeholder="collaborateur@etablissement.fr" required
+                        style={{ fontSize: 13, padding: '10px 12px 10px 32px', borderRadius: 8, border: '0.5px solid #CECBF6', background: '#F8F8FC', color: '#26215C', outline: 'none', width: '100%' }}
+                      />
+                    </div>
+                    <button
+                      type="submit" disabled={inviting || !inviteEmail.trim() || inviteSections.length === 0}
+                      style={{ fontSize: 13, fontWeight: 500, background: '#534AB7', color: '#fff', padding: '10px 18px', borderRadius: 8, border: 'none', cursor: inviting ? 'not-allowed' : 'pointer', opacity: (inviting || inviteSections.length === 0) ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}
+                    >
+                      <IconPlus size={14} />
+                      Inviter
+                    </button>
                   </div>
-                  <button
-                    type="submit" disabled={inviting || !inviteEmail.trim()}
-                    style={{ fontSize: 13, fontWeight: 500, background: '#534AB7', color: '#fff', padding: '10px 18px', borderRadius: 8, border: 'none', cursor: inviting ? 'not-allowed' : 'pointer', opacity: inviting ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}
-                  >
-                    <IconPlus size={14} />
-                    Inviter
-                  </button>
+                  <div>
+                    <div style={{ fontSize: 11, color: '#5F5E5A', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500 }}>Sections accessibles</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {SECTIONS.map(s => {
+                        const checked = inviteSections.includes(s.key)
+                        return (
+                          <label key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: checked ? '#26215C' : '#888780', background: checked ? '#EEEDFE' : '#F8F8FC', border: `0.5px solid ${checked ? '#AFA9EC' : '#CECBF6'}`, borderRadius: 20, padding: '4px 10px', cursor: 'pointer', userSelect: 'none' }}>
+                            <input
+                              type="checkbox" checked={checked}
+                              onChange={() => setInviteSections(prev => checked ? prev.filter(k => k !== s.key) : [...prev, s.key])}
+                              style={{ display: 'none' }}
+                            />
+                            {s.label}
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
                 </form>
                 {orgError && <div style={{ fontSize: 12, color: '#A32D2D', background: '#FCEBEB', padding: '8px 12px', borderRadius: 8, marginTop: 10 }}>{orgError}</div>}
                 {orgSuccess && <div style={{ fontSize: 12, color: '#1D6952', background: '#E1F5EE', padding: '8px 12px', borderRadius: 8, marginTop: 10 }}>{orgSuccess}</div>}
