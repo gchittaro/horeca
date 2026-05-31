@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getUserOrgMembership } from '@/lib/supabase/isPro'
-import { IconBell, IconUserCircle, IconLock, IconBuildingStore } from '@tabler/icons-react'
+import { IconUserCircle, IconLock, IconBuildingStore } from '@tabler/icons-react'
 import { formatUpdateDate } from '@/lib/utils'
 import OnboardingTip from '@/app/components/OnboardingTip'
 import ChatAgent from '@/app/components/ChatAgent'
+import NotificationCenter from '@/app/components/NotificationCenter'
 
 const navItems = [
   { href: '/dashboard',              label: 'Vue globale',  proOnly: false },
@@ -46,7 +47,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#1D9E75', flexShrink: 0 }} />
             {formatUpdateDate()}
           </div>
-          <IconBell size={18} color="#AFA9EC" style={{ cursor: 'pointer', flexShrink: 0 }} />
+          <NotificationCenter />
           {isPro && orgMembership?.role === 'member' && (
             <div style={{ fontSize: 11, color: '#AFA9EC', flexShrink: 0 }}>
               <span style={{ color: '#534AB7' }}>Organisation</span> · {orgMembership.nom}
