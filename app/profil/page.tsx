@@ -38,7 +38,8 @@ export default function ProfilPage() {
   const router = useRouter()
 
   const [userEmail, setUserEmail] = useState('')
-  const [nomGerant, setNomGerant] = useState('')
+  const [prenom, setPrenom] = useState('')
+  const [nom, setNom] = useState('')
   const [telephone, setTelephone] = useState('')
   const [role, setRole] = useState('')
   const [alerts, setAlerts] = useState({ surcout: true, geopolitique: true, reglementation: true, pdf: false })
@@ -70,7 +71,10 @@ export default function ProfilPage() {
         .single()
 
       if (profil) {
-        setNomGerant(profil.nom_gerant || user.user_metadata?.full_name || '')
+        const fullName = profil.nom_gerant || user.user_metadata?.full_name || ''
+        const parts = fullName.trim().split(' ')
+        setPrenom(parts[0] ?? '')
+        setNom(parts.slice(1).join(' '))
         setTelephone(profil.telephone || '')
         setRole(profil.role || '')
         setPlan(profil.plan || user.user_metadata?.plan || 'free')
@@ -81,6 +85,10 @@ export default function ProfilPage() {
           pdf:            profil.alert_rapport_pdf    ?? false,
         })
       } else {
+        const fullName = user.user_metadata?.full_name || ''
+        const parts = fullName.trim().split(' ')
+        setPrenom(parts[0] ?? '')
+        setNom(parts.slice(1).join(' '))
         setPlan(user.user_metadata?.plan || 'free')
       }
 
@@ -106,9 +114,10 @@ export default function ProfilPage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
+      const nomGerant = `${prenom.trim()} ${nom.trim()}`.trim() || null
       const { error } = await supabase.from('etablissements').upsert({
         user_id: user.id,
-        nom_gerant: nomGerant || null,
+        nom_gerant: nomGerant,
         telephone: telephone || null,
         role: role || null,
         alert_surcout: alerts.surcout,
@@ -128,7 +137,7 @@ export default function ProfilPage() {
       fetch('/api/loops/contact', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail, firstName: nomGerant || undefined }),
+        body: JSON.stringify({ email: userEmail, firstName: prenom.trim() || undefined }),
       }).catch(() => {})
     }
     setSaving(false)
@@ -207,8 +216,11 @@ export default function ProfilPage() {
             <IconUser size={17} color="#534AB7" /> Profil personnel
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <Field label="Nom & prénom">
-              <input type="text" value={nomGerant} onChange={e => setNomGerant(e.target.value)} placeholder="Marie Dupont" style={inputStyle} />
+            <Field label="Prénom">
+              <input type="text" value={prenom} onChange={e => setPrenom(e.target.value)} placeholder="Marie" style={inputStyle} />
+            </Field>
+            <Field label="Nom">
+              <input type="text" value={nom} onChange={e => setNom(e.target.value)} placeholder="Dupont" style={inputStyle} />
             </Field>
             <Field label="Téléphone">
               <input type="tel" value={telephone} onChange={e => setTelephone(e.target.value)} placeholder="+33 6 12 34 56 78" style={inputStyle} />
