@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdmin } from '@supabase/supabase-js'
 import { getUserIsPro } from '@/lib/supabase/isPro'
 import { newsletterToken } from '@/app/newsletter/[slug]/page'
+import { getISOWeek } from '@/lib/utils'
 
 export async function GET() {
   const supabase = await createClient()
@@ -21,22 +22,36 @@ export async function GET() {
     .order('semaine', { ascending: false })
     .limit(100)
 
-  // Déduplique les (semaine, annee)
+  // Toujours inclure la semaine en cours en tête de liste
+  const now = new Date()
+  const currentSemaine = getISOWeek(now)
+  const currentAnnee = now.getFullYear()
+
   const seen = new Set<string>()
-  const newsletters = (semaines || [])
-    .filter(r => {
-      const k = `${r.annee}-${r.semaine}`
-      if (seen.has(k)) return false
-      seen.add(k)
-      return true
-    })
-    .slice(0, 12)
-    .map(r => ({
-      label: `Semaine ${r.semaine} · ${r.annee}`,
-      url: `${appUrl}/newsletter/${r.annee}-S${r.semaine}-${newsletterToken(r.annee, r.semaine)}`,
-      semaine: r.semaine,
-      annee: r.annee,
-    }))
+  seen.add(`${currentAnnee}-${currentSemaine}`)
+
+  const newsletters = [
+    {
+      label: `Semaine ${currentSemaine} · ${currentAnnee}`,
+      url: `${appUrl}/newsletter/${currentAnnee}-S${currentSemaine}-${newsletterToken(currentAnnee, currentSemaine)}`,
+      semaine: currentSemaine,
+      annee: currentAnnee,
+    },
+    ...(semaines || [])
+      .filter(r => {
+        const k = `${r.annee}-${r.semaine}`
+        if (seen.has(k)) return false
+        seen.add(k)
+        return true
+      })
+      .slice(0, 11)
+      .map(r => ({
+        label: `Semaine ${r.semaine} · ${r.annee}`,
+        url: `${appUrl}/newsletter/${r.annee}-S${r.semaine}-${newsletterToken(r.annee, r.semaine)}`,
+        semaine: r.semaine,
+        annee: r.annee,
+      })),
+  ]
 
   // Alertes — uniquement pour les Pro
   let alertes: { id: string; titre: string; description: string; severite: string; created_at: string }[] = []
