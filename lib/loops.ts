@@ -12,12 +12,13 @@ const API = 'https://app.loops.so/api/v1'
  * LOOPS_TX_SUBSCRIPTION_END → variables : firstName
  */
 export const LOOPS_TX = {
-  TEAM_INVITE:      process.env.LOOPS_TX_TEAM_INVITE      ?? '',
-  PRO_CONFIRM:      process.env.LOOPS_TX_PRO_CONFIRM      ?? '',
-  ALERT_COST:       process.env.LOOPS_TX_ALERT_COST       ?? '',
-  ALERT_GEO:        process.env.LOOPS_TX_ALERT_GEO        ?? '',
-  WELCOME_FREE:     process.env.LOOPS_TX_WELCOME_FREE     ?? '',
-  SUBSCRIPTION_END: process.env.LOOPS_TX_SUBSCRIPTION_END ?? '',
+  TEAM_INVITE:        process.env.LOOPS_TX_TEAM_INVITE        ?? '',
+  PRO_CONFIRM:        process.env.LOOPS_TX_PRO_CONFIRM        ?? '',
+  ALERT_COST:         process.env.LOOPS_TX_ALERT_COST         ?? '',
+  ALERT_GEO:          process.env.LOOPS_TX_ALERT_GEO          ?? '',
+  WELCOME_FREE:       process.env.LOOPS_TX_WELCOME_FREE       ?? '',
+  SUBSCRIPTION_END:   process.env.LOOPS_TX_SUBSCRIPTION_END   ?? '',
+  NEWSLETTER_WEEKLY:  process.env.LOOPS_TX_NEWSLETTER_WEEKLY  ?? '',
 }
 
 async function req(path: string, method: string, body?: unknown) {
