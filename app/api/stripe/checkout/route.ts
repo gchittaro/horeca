@@ -10,9 +10,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
   }
 
-  const priceId = process.env.STRIPE_PRO_PRICE_ID
+  const priceId = process.env.STRIPE_PRICE_ID
   if (!priceId) {
-    console.error('[stripe/checkout] STRIPE_PRO_PRICE_ID manquant')
+    console.error('[stripe/checkout] STRIPE_PRICE_ID manquant')
     return NextResponse.json({ error: 'Configuration Stripe incomplète' }, { status: 500 })
   }
 
