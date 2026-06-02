@@ -235,8 +235,8 @@ export default async function NewsletterPage({ params }: { params: Promise<{ slu
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                           <div style={{ fontSize: 15, fontWeight: 600, color: '#26215C' }}>— —</div>
-                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: ind.variation_pct > 0 ? '#FCEBEB' : '#EAF3DE', color: ind.variation_pct > 0 ? '#A32D2D' : '#3B6D11' }}>
-                            {ind.variation_pct > 0 ? `↑ +${ind.variation_pct.toFixed(1)}%` : `↓ ${ind.variation_pct.toFixed(1)}%`}
+                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: Number(ind.variation_pct) > 0 ? '#FCEBEB' : '#EAF3DE', color: Number(ind.variation_pct) > 0 ? '#A32D2D' : '#3B6D11' }}>
+                            {Number(ind.variation_pct) > 0 ? `↑ +${Number(ind.variation_pct).toFixed(1)}%` : `↓ ${Number(ind.variation_pct).toFixed(1)}%`}
                           </span>
                         </div>
                       </div>
