@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { IconX } from '@tabler/icons-react'
 
@@ -17,7 +17,11 @@ interface Props {
 }
 
 export default function OnboardingTip({ storageKey, icon, iconActive, href, title, message, linkLabel, linkIcon, arrowRight = 8 }: Props) {
-  const [open, setOpen] = useState(() => !localStorage.getItem(storageKey))
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    setOpen(!localStorage.getItem(storageKey))
+  }, [storageKey])
   const ref = useRef<HTMLDivElement>(null)
 
   function dismiss() {
