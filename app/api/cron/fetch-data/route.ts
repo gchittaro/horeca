@@ -22,7 +22,21 @@ Ton rôle est de collecter, analyser et structurer les données de marché chaqu
 6. Niveau de langue : professionnel, factuel, sans sensationnalisme.
 
 ## Format de sortie
-Retourne UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks markdown.`
+Retourne UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks markdown.
+
+Le JSON doit contenir un champ "indicateurs" avec des objets ayant cette structure exacte :
+{
+  "nom": "Café arabica",
+  "valeur": 4250,
+  "unite": "€/t",
+  "variation_pct": 2.3,
+  "periode": "mensuel",
+  "source": "ICE",
+  "categorie": "boissons"
+}
+
+Valeurs autorisées pour "categorie" : food, boissons, energie, rh, juridique
+Valeurs autorisées pour "periode" : hebdo, mensuel, trimestr, annuel`
 }
 
 function buildUserPrompt(rawData: Record<string, string>, previousWeekData: string) {
