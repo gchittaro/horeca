@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { IconBell, IconX, IconAlertTriangle, IconNews, IconExternalLink, IconLock, IconCheck } from '@tabler/icons-react'
 
+const TIP_KEY = 'horeca_tip_newsletter'
+
 type Alerte = { id: string; titre: string; description: string; severite: string; created_at: string }
 type Newsletter = { label: string; url: string; semaine: number; annee: number }
 type Data = { isPro: boolean; alertes: Alerte[]; newsletters: Newsletter[] }
@@ -37,9 +39,13 @@ export default function NotificationCenter() {
   const [data, setData]       = useState<Data | null>(null)
   const [loading, setLoading] = useState(false)
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const [showTip, setShowTip] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  useEffect(() => { setReadIds(loadReadIds()) }, [])
+  useEffect(() => {
+    setReadIds(loadReadIds())
+    setShowTip(!localStorage.getItem(TIP_KEY))
+  }, [])
 
   useEffect(() => {
     if (!open || data) return
@@ -66,6 +72,17 @@ export default function NotificationCenter() {
     })
   }
 
+  function dismissTip() {
+    localStorage.setItem(TIP_KEY, '1')
+    setShowTip(false)
+  }
+
+  function openWithNewsletter() {
+    dismissTip()
+    setTab('newsletters')
+    setOpen(true)
+  }
+
   function markAllRead() {
     const all = new Set(data?.alertes?.map(a => a.id) ?? [])
     setReadIds(prev => {
@@ -82,11 +99,11 @@ export default function NotificationCenter() {
     <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
       {/* Cloche */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => { dismissTip(); setOpen(o => !o) }}
         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 0, position: 'relative' }}
         aria-label="Notifications"
       >
-        <IconBell size={18} color={open ? '#fff' : '#AFA9EC'} />
+        <IconBell size={18} color={open || showTip ? '#fff' : '#AFA9EC'} />
         {hasAlert && (
           <span style={{
             position: 'absolute', top: -4, right: -4,
@@ -95,6 +112,41 @@ export default function NotificationCenter() {
           }} />
         )}
       </button>
+
+      {/* Bulle newsletter */}
+      {showTip && !open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 14px)', right: 0, width: 240,
+          background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 10,
+          padding: '14px 14px 14px 16px', boxShadow: '0 8px 24px rgba(38,33,92,0.15)', zIndex: 200,
+        }}>
+          <div style={{
+            position: 'absolute', top: -6, right: 6,
+            width: 10, height: 10, background: '#fff',
+            border: '0.5px solid #CECBF6', borderRight: 'none', borderBottom: 'none',
+            transform: 'rotate(45deg)',
+          }} />
+          <button
+            onClick={dismissTip}
+            style={{ position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 0 }}
+            aria-label="Fermer"
+          >
+            <IconX size={13} color="#888780" />
+          </button>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#26215C', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Newsletter hebdomadaire
+          </div>
+          <div style={{ fontSize: 12, color: '#5F5E5A', lineHeight: 1.6, marginBottom: 10 }}>
+            Retrouvez chaque lundi la newsletter de la semaine directement dans vos notifications.
+          </div>
+          <button
+            onClick={openWithNewsletter}
+            style={{ fontSize: 12, fontWeight: 500, color: '#534AB7', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            <IconNews size={13} /> Voir les newsletters →
+          </button>
+        </div>
+      )}
 
       {/* Panneau */}
       {open && (
