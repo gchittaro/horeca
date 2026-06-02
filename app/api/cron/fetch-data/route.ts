@@ -164,6 +164,10 @@ export async function GET(request: Request) {
   })
 
   const claudeData = await claudeRes.json()
+  if (!claudeRes.ok || claudeData.error) {
+    console.error('[cron/fetch-data] Erreur Claude API:', JSON.stringify(claudeData))
+    return NextResponse.json({ error: 'Claude API error', detail: claudeData.error ?? claudeData }, { status: 500 })
+  }
   const text: string = claudeData.content?.[0]?.text || ''
 
   // 4. Parser le JSON Claude
