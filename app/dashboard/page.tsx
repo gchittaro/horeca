@@ -72,9 +72,12 @@ function IndicateurRow({ ind }: { ind: Indicateur }) {
       </div>
       <div style={{ textAlign: 'right' }}>
         <div style={{ fontSize: 14, fontWeight: 500, color: '#26215C' }}>
-          {ind.valeur >= 1000
-            ? ind.valeur.toLocaleString('fr-FR') + ' €'
-            : ind.valeur.toLocaleString('fr-FR', { minimumFractionDigits: ind.valeur % 1 !== 0 ? 2 : 0 }) + ' €'}
+          {ind.valeur != null
+            ? (ind.valeur >= 1000
+                ? Number(ind.valeur).toLocaleString('fr-FR')
+                : Number(ind.valeur).toLocaleString('fr-FR', { minimumFractionDigits: ind.valeur % 1 !== 0 ? 2 : 0 }))
+              + (ind.unite ? ` ${ind.unite}` : '')
+            : '—'}
         </div>
         <PillVariation pct={ind.variation_pct} periode={ind.periode} />
       </div>

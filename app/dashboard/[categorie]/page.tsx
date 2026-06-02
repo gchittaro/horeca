@@ -32,14 +32,16 @@ const categorieConfig: Record<Categorie, { label: string; Icon: React.ElementTyp
   geopolitique: { label: 'Géopolitique', Icon: IconWorld },
 }
 
-function formatValue(valeur: number, unite: string): string {
+function formatValue(valeur: number | null, unite: string | null): string {
+  if (valeur == null) return '—'
   const num = valeur >= 1000
     ? valeur.toLocaleString('fr-FR')
     : Number(valeur).toLocaleString('fr-FR', { minimumFractionDigits: valeur % 1 !== 0 ? 2 : 0 })
+  if (!unite) return num
   if (unite.startsWith('€')) return num + ' €'
   if (unite.startsWith('%')) return num + ' %'
   if (unite.includes('pts')) return num + ' pts'
-  return num
+  return num + ' ' + unite
 }
 
 const periodeLabel: Record<string, string> = {
