@@ -122,9 +122,11 @@ export async function GET(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
+  // Paramètres optionnels pour backfill d'une semaine passée
+  const url = new URL(request.url)
   const now = new Date()
-  const SEMAINE = getISOWeek(now)
-  const ANNEE = now.getFullYear()
+  const SEMAINE = url.searchParams.get('semaine') ? parseInt(url.searchParams.get('semaine')!) : getISOWeek(now)
+  const ANNEE = url.searchParams.get('annee') ? parseInt(url.searchParams.get('annee')!) : now.getFullYear()
 
   // 1. Fetch toutes les sources en parallèle
   const [franceagrimer, gdelt, jo, rss_chr, legifrance_chr] = await Promise.all([

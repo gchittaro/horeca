@@ -15,12 +15,13 @@ export async function GET() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://horeca.watch'
 
   // Newsletters passées — semaines distinctes avec données (accessible à tous)
+  // Limite haute car il peut y avoir beaucoup de lignes par semaine (cron quotidien)
   const { data: semaines } = await admin
     .from('indicateurs')
     .select('semaine, annee')
     .order('annee', { ascending: false })
     .order('semaine', { ascending: false })
-    .limit(100)
+    .limit(5000)
 
   // Toujours inclure la semaine en cours en tête de liste
   const now = new Date()
