@@ -125,11 +125,13 @@ export default async function NewsletterPage({ params }: { params: Promise<{ slu
                   {inds.map(ind => {
                     const up = ind.variation_pct > 0
                     const stable = ind.variation_pct === 0
-                    const valNum = Number(ind.valeur)
-                    const valStr = valNum >= 1000
-                      ? valNum.toLocaleString('fr-FR')
-                      : valNum.toLocaleString('fr-FR', { minimumFractionDigits: valNum % 1 !== 0 ? 2 : 0 })
-                    const val = ind.unite?.startsWith('€') ? `${valStr} €`
+                    const valNum = ind.valeur != null ? Number(ind.valeur) : null
+                    const valStr = valNum == null ? '—'
+                      : valNum >= 1000
+                        ? valNum.toLocaleString('fr-FR')
+                        : valNum.toLocaleString('fr-FR', { minimumFractionDigits: valNum % 1 !== 0 ? 2 : 0 })
+                    const val = valNum == null ? '—'
+                      : ind.unite?.startsWith('€') ? `${valStr} €`
                       : ind.unite?.startsWith('%') ? `${valStr} %`
                       : ind.unite?.includes('pts') ? `${valStr} pts`
                       : ind.unite ? `${valStr} ${ind.unite}`

@@ -39,8 +39,7 @@ Valeurs autorisées pour "categorie" : food, boissons, energie, rh, juridique
 Valeurs autorisées pour "periode" : hebdo, mensuel, trimestr, annuel`
 }
 
-function buildUserPrompt(rawData: Record<string, string>, previousWeekData: string) {
-  const semaine = getISOWeek(new Date())
+function buildUserPrompt(rawData: Record<string, string>, previousWeekData: string, semaine: number) {
   return `Voici les données brutes collectées cette semaine depuis les sources publiques de HoReCa.Watch.
 
 ## Données FranceAgriMer (semaine ${semaine})
@@ -172,7 +171,7 @@ export async function GET(request: Request) {
       system: buildSystemPrompt(),
       messages: [{
         role: 'user',
-        content: buildUserPrompt({ franceagrimer, gdelt, jo, rss_chr, legifrance_chr }, JSON.stringify(prevWeek || [])),
+        content: buildUserPrompt({ franceagrimer, gdelt, jo, rss_chr, legifrance_chr }, JSON.stringify(prevWeek || []), SEMAINE),
       }],
     }),
   })
