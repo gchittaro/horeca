@@ -63,12 +63,12 @@ export default async function NewsletterPage({ params }: { params: Promise<{ slu
 
   const [{ data: indicateurs }, { data: indicateursPro }, { data: signaux }] = await Promise.all([
     admin.from('indicateurs')
-      .select('id, nom, valeur, unite, variation_pct, source, categorie')
+      .select('id, nom, valeur, unite, variation_pct, source, categorie, periode')
       .in('categorie', ['food', 'boissons'])
       .eq('semaine', semaine).eq('annee', annee)
       .order('categorie').order('variation_pct', { ascending: false }),
     admin.from('indicateurs')
-      .select('id, nom, valeur, unite, variation_pct, source, categorie')
+      .select('id, nom, valeur, unite, variation_pct, source, categorie, periode')
       .in('categorie', ['energie', 'rh', 'juridique'])
       .eq('semaine', semaine).eq('annee', annee)
       .order('categorie').order('variation_pct', { ascending: false }),
@@ -132,7 +132,16 @@ export default async function NewsletterPage({ params }: { params: Promise<{ slu
                     const val = ind.unite?.startsWith('€') ? `${valStr} €`
                       : ind.unite?.startsWith('%') ? `${valStr} %`
                       : ind.unite?.includes('pts') ? `${valStr} pts`
+                      : ind.unite ? `${valStr} ${ind.unite}`
                       : valStr
+                    const periodeLabels: Record<string, string> = {
+                      hebdo: 'vs sem. préc.',
+                      mensuel: 'vs mois préc.',
+                      annuel: 'vs an préc.',
+                      trimestr: 'vs trim. préc.',
+                      semestr: 'vs sem. préc.',
+                    }
+                    const periodeLabel = ind.periode ? (periodeLabels[ind.periode] ?? ind.periode) : null
                     return (
                       <div key={ind.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#F8F8FC', borderRadius: 9 }}>
                         <div>
@@ -150,6 +159,9 @@ export default async function NewsletterPage({ params }: { params: Promise<{ slu
                             {!stable && (up ? <IconTrendingUp size={10} /> : <IconTrendingDown size={10} />)}
                             {stable ? '= stable' : `${up ? '+' : ''}${Number(ind.variation_pct).toFixed(1)}%`}
                           </span>
+                          {periodeLabel && (
+                            <span style={{ fontSize: 9, color: '#B0AED6' }}>{periodeLabel}</span>
+                          )}
                         </div>
                       </div>
                     )
