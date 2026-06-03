@@ -63,22 +63,33 @@ function LockedSection({ label }: { label: string }) {
   )
 }
 
+function formatIndicateur(valeur: number | null, unite: string | null): { val: string; unit: string } {
+  let displayVal = valeur != null ? Number(valeur) : null
+  let displayUnit = unite ?? ''
+  if (displayVal != null && displayUnit === '€/t') {
+    displayVal = Math.round(displayVal) / 1000
+    displayUnit = '€/kg'
+  } else if (displayVal != null && (displayUnit === '€/100 kg' || displayUnit === '€/100kg')) {
+    displayVal = Math.round(displayVal) / 100
+    displayUnit = '€/kg'
+  }
+  if (displayVal == null) return { val: '—', unit: displayUnit }
+  const str = displayVal >= 1000
+    ? displayVal.toLocaleString('fr-FR')
+    : displayVal.toLocaleString('fr-FR', { minimumFractionDigits: displayVal % 1 !== 0 ? 2 : 0 })
+  return { val: displayUnit ? `${str} ${displayUnit}` : str, unit: displayUnit }
+}
+
 function IndicateurRow({ ind }: { ind: Indicateur }) {
+  const { val, unit } = formatIndicateur(ind.valeur, ind.unite)
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 11px', background: '#F8F8FC', borderRadius: 9 }}>
       <div>
         <div style={{ fontSize: 12, fontWeight: 500, color: '#26215C' }}>{ind.nom}</div>
-        <div style={{ fontSize: 10, color: '#888780', marginTop: 2 }}>{ind.source} · {ind.unite}</div>
+        <div style={{ fontSize: 10, color: '#888780', marginTop: 2 }}>{ind.source} · {unit || ind.unite}</div>
       </div>
       <div style={{ textAlign: 'right' }}>
-        <div style={{ fontSize: 14, fontWeight: 500, color: '#26215C' }}>
-          {ind.valeur != null
-            ? (ind.valeur >= 1000
-                ? Number(ind.valeur).toLocaleString('fr-FR')
-                : Number(ind.valeur).toLocaleString('fr-FR', { minimumFractionDigits: ind.valeur % 1 !== 0 ? 2 : 0 }))
-              + (ind.unite ? ` ${ind.unite}` : '')
-            : '—'}
-        </div>
+        <div style={{ fontSize: 14, fontWeight: 500, color: '#26215C' }}>{val}</div>
         <PillVariation pct={ind.variation_pct} periode={ind.periode} />
       </div>
     </div>

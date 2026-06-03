@@ -34,14 +34,22 @@ const categorieConfig: Record<Categorie, { label: string; Icon: React.ElementTyp
 
 function formatValue(valeur: number | null, unite: string | null): string {
   if (valeur == null) return '—'
-  const num = valeur >= 1000
-    ? valeur.toLocaleString('fr-FR')
-    : Number(valeur).toLocaleString('fr-FR', { minimumFractionDigits: valeur % 1 !== 0 ? 2 : 0 })
-  if (!unite) return num
-  if (unite.startsWith('€')) return num + ' €'
-  if (unite.startsWith('%')) return num + ' %'
-  if (unite.includes('pts')) return num + ' pts'
-  return num + ' ' + unite
+  let displayVal = Number(valeur)
+  let displayUnit = unite ?? ''
+  if (displayUnit === '€/t') {
+    displayVal = Math.round(displayVal) / 1000
+    displayUnit = '€/kg'
+  } else if (displayUnit === '€/100 kg' || displayUnit === '€/100kg') {
+    displayVal = Math.round(displayVal) / 100
+    displayUnit = '€/kg'
+  }
+  const num = displayVal >= 1000
+    ? displayVal.toLocaleString('fr-FR')
+    : displayVal.toLocaleString('fr-FR', { minimumFractionDigits: displayVal % 1 !== 0 ? 2 : 0 })
+  if (!displayUnit) return num
+  if (displayUnit.startsWith('%')) return num + ' %'
+  if (displayUnit.includes('pts')) return num + ' pts'
+  return num + ' ' + displayUnit
 }
 
 const periodeLabel: Record<string, string> = {
