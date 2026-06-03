@@ -125,16 +125,21 @@ export default async function NewsletterPage({ params }: { params: Promise<{ slu
                   {inds.map(ind => {
                     const up = ind.variation_pct > 0
                     const stable = ind.variation_pct === 0
-                    const valNum = ind.valeur != null ? Number(ind.valeur) : null
-                    const valStr = valNum == null ? '—'
-                      : valNum >= 1000
-                        ? valNum.toLocaleString('fr-FR')
-                        : valNum.toLocaleString('fr-FR', { minimumFractionDigits: valNum % 1 !== 0 ? 2 : 0 })
-                    const val = valNum == null ? '—'
-                      : ind.unite?.startsWith('€') ? `${valStr} €`
-                      : ind.unite?.startsWith('%') ? `${valStr} %`
-                      : ind.unite?.includes('pts') ? `${valStr} pts`
-                      : ind.unite ? `${valStr} ${ind.unite}`
+                    let displayVal = ind.valeur != null ? Number(ind.valeur) : null
+                    let displayUnit = ind.unite ?? ''
+                    if (displayVal != null && displayUnit === '€/t') {
+                      displayVal = Math.round(displayVal) / 1000
+                      displayUnit = '€/kg'
+                    } else if (displayVal != null && (displayUnit === '€/100 kg' || displayUnit === '€/100kg')) {
+                      displayVal = Math.round(displayVal) / 100
+                      displayUnit = '€/kg'
+                    }
+                    const valStr = displayVal == null ? '—'
+                      : displayVal >= 1000
+                        ? displayVal.toLocaleString('fr-FR')
+                        : displayVal.toLocaleString('fr-FR', { minimumFractionDigits: displayVal % 1 !== 0 ? 2 : 0 })
+                    const val = displayVal == null ? '—'
+                      : displayUnit ? `${valStr} ${displayUnit}`
                       : valStr
                     const periodeLabels: Record<string, string> = {
                       hebdo: 'vs sem. préc.', mensuel: 'vs mois préc.',
