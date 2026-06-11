@@ -37,11 +37,19 @@ export async function middleware(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Check plan direct d'abord
-    const plan = (user.user_metadata?.plan ?? 'free') as string
-    let isPro = plan === 'pro' || plan === 'team'
+    // Check plan : user_metadata, puis établissements, puis org
+    const metaPlan = (user.user_metadata?.plan ?? 'free') as string
+    let isPro = metaPlan === 'pro' || metaPlan === 'team'
 
-    // Sinon vérifier appartenance org pro
+    if (!isPro) {
+      const { data: etab } = await admin
+        .from('etablissements')
+        .select('plan')
+        .eq('user_id', user.id)
+        .single()
+      isPro = etab?.plan === 'pro' || etab?.plan === 'team'
+    }
+
     if (!isPro) {
       const { data: member } = await admin
         .from('organisation_members')
