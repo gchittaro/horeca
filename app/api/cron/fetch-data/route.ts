@@ -123,11 +123,9 @@ async function fetchAlphaVantage(): Promise<string> {
     const [sugarCurr, sugarPrev]   = latest2(sugarData)
     const [cocoaCurr, cocoaPrev]   = latest2(cocoaData)
 
-    // cents/lb → €/t  (1 lb = 0.453592 kg → 1 t = 2204.62 lb)
+    // cents/lb → €/t  (coffee, sugar — 1 t = 2204.62 lb)
     const centsLbToEurT = (v: string) => Math.round(parseFloat(v) / 100 * 2204.62 * usdToEur)
-    // cents/bushel → €/t  (1 bushel wheat = 27.2155 kg)
-    const centsBuToEurT = (v: string) => Math.round(parseFloat(v) / 100 / 0.0272155 * usdToEur)
-    // USD/metric ton → €/t
+    // USD/metric ton → €/t  (wheat, cocoa)
     const usdTToEurT    = (v: string) => Math.round(parseFloat(v) * usdToEur)
 
     const lines: string[] = [`Taux EUR/USD utilisé : ${usdToEur}`]
@@ -137,8 +135,8 @@ async function fetchAlphaVantage(): Promise<string> {
       (coffeePrev ? ` | mois précédent : ${centsLbToEurT(coffeePrev.value)} €/t | variation : ${pct(coffeeCurr.value, coffeePrev.value)}%` : '')
     )
     if (wheatCurr) lines.push(
-      `Blé tendre : ${centsBuToEurT(wheatCurr.value)} €/t (${wheatCurr.date})` +
-      (wheatPrev ? ` | mois précédent : ${centsBuToEurT(wheatPrev.value)} €/t | variation : ${pct(wheatCurr.value, wheatPrev.value)}%` : '')
+      `Blé tendre : ${usdTToEurT(wheatCurr.value)} €/t (${wheatCurr.date})` +
+      (wheatPrev ? ` | mois précédent : ${usdTToEurT(wheatPrev.value)} €/t | variation : ${pct(wheatCurr.value, wheatPrev.value)}%` : '')
     )
     if (sugarCurr) lines.push(
       `Sucre blanc : ${centsLbToEurT(sugarCurr.value)} €/t (${sugarCurr.date})` +
