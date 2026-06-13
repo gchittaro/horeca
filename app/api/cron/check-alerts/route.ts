@@ -53,7 +53,9 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.admin.getUserById(profil.user_id)
     if (!user?.email) continue
 
-    const plan = user.user_metadata?.plan || 'free'
+    const metaPlan = user.user_metadata?.plan || 'free'
+    const { data: etab } = await supabase.from('etablissements').select('plan').eq('user_id', profil.user_id).single()
+    const plan = (metaPlan === 'pro' || metaPlan === 'team') ? metaPlan : (etab?.plan || 'free')
     if (plan !== 'pro' && plan !== 'team') continue
 
     const alertEmails: { eventName: string; properties: Record<string, unknown> }[] = []

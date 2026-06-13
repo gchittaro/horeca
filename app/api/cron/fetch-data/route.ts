@@ -24,7 +24,9 @@ Ton rôle est de collecter, analyser et structurer les données de marché chaqu
 ## Format de sortie
 Retourne UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks markdown.
 
-Le JSON doit contenir un champ "indicateurs" avec des objets ayant cette structure exacte :
+Le JSON doit contenir trois champs :
+
+1. "indicateurs" — tableau d'objets avec cette structure exacte :
 {
   "nom": "Café arabica",
   "valeur": 4250,
@@ -34,9 +36,23 @@ Le JSON doit contenir un champ "indicateurs" avec des objets ayant cette structu
   "source": "ICE",
   "categorie": "boissons"
 }
-
 Valeurs autorisées pour "categorie" : food, boissons, energie, rh, juridique
-Valeurs autorisées pour "periode" : hebdo, mensuel, trimestr, annuel`
+Valeurs autorisées pour "periode" : hebdo, mensuel, trimestr, annuel
+
+2. "alertes_reglementation" — tableau d'alertes réglementaires CHR (SMIC, TVA, convention HCR, sanitaire, licences…). Laisser vide [] si rien de significatif cette semaine.
+{
+  "titre": "Revalorisation du SMIC au 1er juillet",
+  "description": "Le SMIC horaire passe de 11,88 € à 12,08 €. Impact direct sur les grilles HCR et le coût salarial.",
+  "severite": "high"
+}
+Valeurs autorisées pour "severite" : high, medium, low
+
+3. "alertes_rh" — tableau d'alertes RH secteur CHR (accord de branche, temps de travail, grèves, pénurie de main-d'œuvre…). Laisser vide [] si rien de significatif cette semaine.
+{
+  "titre": "Accord sur les heures supplémentaires HCR",
+  "description": "Nouveau taux de majoration à 25% dès la 36ème heure pour les établissements de moins de 50 salariés.",
+  "severite": "medium"
+}`
 }
 
 function buildUserPrompt(rawData: Record<string, string>, previousWeekData: string, semaine: number) {
