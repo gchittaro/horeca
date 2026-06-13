@@ -278,10 +278,11 @@ export async function GET(request: Request) {
     parsed = JSON.parse(match[0])
   }
 
-  // 5. Insérer dans Supabase
+  // 5. Insérer dans Supabase (delete + insert pour idempotence)
   const results: Record<string, unknown> = {}
 
   if (parsed.indicateurs?.length) {
+    await supabase.from('indicateurs').delete().eq('semaine', SEMAINE).eq('annee', ANNEE)
     const rows = (parsed.indicateurs as Record<string, unknown>[]).map(i => ({ ...i, semaine: SEMAINE, annee: ANNEE, fetched_at: new Date().toISOString() }))
     const { error } = await supabase.from('indicateurs').insert(rows)
     results.indicateurs = error ? error.message : `${rows.length} insérés`
