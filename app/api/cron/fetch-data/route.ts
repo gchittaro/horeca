@@ -90,18 +90,19 @@ async function fetchAlphaVantage(): Promise<string> {
 
   const base = 'https://www.alphavantage.co/query'
 
-  try {
-    const [fxRes, coffeeRes, wheatRes, sugarRes, cocoaRes] = await Promise.all([
-      fetch(`${base}?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=EUR&apikey=${key}`, { next: { revalidate: 0 } }),
-      fetch(`${base}?function=COFFEE&interval=monthly&apikey=${key}`, { next: { revalidate: 0 } }),
-      fetch(`${base}?function=WHEAT&interval=monthly&apikey=${key}`, { next: { revalidate: 0 } }),
-      fetch(`${base}?function=SUGAR&interval=monthly&apikey=${key}`, { next: { revalidate: 0 } }),
-      fetch(`${base}?function=COCOA&interval=monthly&apikey=${key}`, { next: { revalidate: 0 } }),
-    ])
+  const av = (fn: string) => fetch(`${base}?${fn}&apikey=${key}`, { cache: 'no-store' }).then(r => r.json())
+  const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
-    const [fxData, coffeeData, wheatData, sugarData, cocoaData] = await Promise.all([
-      fxRes.json(), coffeeRes.json(), wheatRes.json(), sugarRes.json(), cocoaRes.json(),
-    ])
+  try {
+    const fxData     = await av('function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=EUR')
+    await delay(13000)
+    const coffeeData = await av('function=COFFEE&interval=monthly')
+    await delay(13000)
+    const wheatData  = await av('function=WHEAT&interval=monthly')
+    await delay(13000)
+    const sugarData  = await av('function=SUGAR&interval=monthly')
+    await delay(13000)
+    const cocoaData  = await av('function=COCOA&interval=monthly')
 
     const usdToEur = parseFloat(fxData?.['Realtime Currency Exchange Rate']?.['5. Exchange Rate'] ?? '0')
     if (!usdToEur) return 'Taux de change USD/EUR indisponible'
