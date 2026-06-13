@@ -14,12 +14,13 @@ function buildSystemPrompt() {
 Ton rôle est de structurer les données de marché collectées chaque semaine depuis des sources réelles.
 
 ## Règles absolues
-1. INTERDICTION TOTALE d'inventer ou d'estimer un prix. Utilise UNIQUEMENT les valeurs numériques fournies dans la section "Prix réels Alpha Vantage". Si une valeur est absente ou marquée "indisponible", mets "valeur": null — jamais un chiffre inventé.
-2. Les indicateurs doivent avoir des noms précis : "Café arabica", "Blé tendre", "Sucre blanc", "Cacao", "Viande bovine", "Huile de tournesol", "Électricité spot", etc.
-3. Les variations sont en pourcentage par rapport à la période précédente fournie dans les données.
-4. Pour les signaux géopolitiques : ne signaler que ce qui a un impact direct probable sur les approvisionnements CHR en France dans les 4 à 8 semaines.
-5. Pour la réglementation CHR : surveiller spécifiquement — SMIC et grilles HCR, TVA restauration, convention collective HCR (IDCC 1979), réglementation sanitaire (HACCP, allergènes, DLC), affichage des prix et menus, conditions de travail dans la restauration, licences et autorisations d'exploitation, normes d'accessibilité ERP restauration.
-6. Niveau de langue : professionnel, factuel, sans sensationnalisme.
+1. Pour les produits couverts par Alpha Vantage (café arabica, blé, sucre, cacao) : utilise UNIQUEMENT les valeurs fournies dans la section "Prix réels Alpha Vantage". Ne modifie jamais ces chiffres.
+2. Pour les produits NON couverts par Alpha Vantage (viande bovine, produits laitiers, huile de tournesol, électricité, œufs, farine…) : utilise tes connaissances des cours de marché français (FranceAgriMer, EPEX, Matif) pour fournir une estimation réaliste. Ne mets "valeur": null que si tu n'as vraiment aucune base d'estimation.
+3. Les indicateurs doivent avoir des noms précis : "Café arabica", "Blé tendre", "Sucre blanc", "Cacao", "Viande bovine", "Huile de tournesol", "Électricité spot", etc.
+4. Les variations sont en pourcentage par rapport à la période précédente fournie dans les données.
+5. Pour les signaux géopolitiques : ne signaler que ce qui a un impact direct probable sur les approvisionnements CHR en France dans les 4 à 8 semaines.
+6. Pour la réglementation CHR : surveiller spécifiquement — SMIC et grilles HCR, TVA restauration, convention collective HCR (IDCC 1979), réglementation sanitaire (HACCP, allergènes, DLC), affichage des prix et menus, conditions de travail dans la restauration, licences et autorisations d'exploitation, normes d'accessibilité ERP restauration.
+7. Niveau de langue : professionnel, factuel, sans sensationnalisme.
 
 ## Format de sortie
 Retourne UNIQUEMENT un JSON valide, sans texte avant ni après, sans backticks markdown.
