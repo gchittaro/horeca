@@ -52,7 +52,9 @@ Valeurs autorisées pour "severite" : high, medium, low
   "titre": "Accord sur les heures supplémentaires HCR",
   "description": "Nouveau taux de majoration à 25% dès la 36ème heure pour les établissements de moins de 50 salariés.",
   "severite": "medium"
-}`
+}
+
+IMPORTANT : Ne jamais générer d'alerte pour signaler une indisponibilité technique des sources de données (erreurs de fetch, Cloudflare, API indisponible). Les alertes sont UNIQUEMENT destinées aux événements réglementaires et RH ayant un impact direct sur les professionnels CHR.`
 }
 
 function buildUserPrompt(rawData: Record<string, string>, previousWeekData: string, semaine: number) {
