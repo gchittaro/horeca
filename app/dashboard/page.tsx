@@ -191,7 +191,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div style={{ background: '#fff', border: '0.5px solid #CECBF6', borderRadius: 13, padding: 18 }}>
           <div style={{ fontSize: 13, fontWeight: 500, color: '#26215C', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             Matières premières Food
-            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#7F77DD', fontWeight: 400 }}>FranceAgriMer · Matif · ICE</span>
+            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#7F77DD', fontWeight: 400 }}>Alpha Vantage · ICE · FranceAgriMer</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {visibleFood.map(ind => <IndicateurRow key={ind.id} ind={ind} />)}

@@ -12,7 +12,7 @@ import HeroEmailCapture from '@/app/components/HeroEmailCapture'
 import PricingSection from '@/app/components/PricingSection'
 
 const features = [
-  { Icon: IconChartLine,    title: 'Prix matières premières', desc: '18 indicateurs clés actualisés depuis FranceAgriMer, Matif, ICE.' },
+  { Icon: IconChartLine,    title: 'Prix matières premières', desc: 'Café, blé, sucre, cacao en temps réel via Alpha Vantage (ICE/CME). Viandes et produits laitiers via FranceAgriMer.' },
   { Icon: IconWorld,        title: 'Signaux géopolitiques',   desc: 'GDELT analyse 100+ langues pour anticiper les tensions sur les approvisionnements.' },
   { Icon: IconBolt,         title: 'Énergie',                 desc: 'Électricité spot et gaz TTF via ODRÉ et RTE Open Data.' },
   { Icon: IconScale,        title: 'Réglementation',          desc: 'Légifrance, JO, DGCCRF, convention HCR — les textes qui comptent, résumés.' },
@@ -33,7 +33,7 @@ const signals = [
     Icon: IconChartLine,
     title: "Café arabica : plus haut depuis 18 mois",
     desc: "+11,2% sur le mois, porté par la sécheresse brésilienne et la demande asiatique.",
-    time: "Food · ICE NY · Semaine 21",
+    time: "Food · Alpha Vantage · ICE · Semaine 21",
   },
   {
     type: 'legal' as const,

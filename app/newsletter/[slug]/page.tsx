@@ -109,7 +109,7 @@ export default async function NewsletterPage({ params }: { params: Promise<{ slu
             Bulletin marché CHR — {dateLabel}
           </h1>
           <p style={{ fontSize: 13, color: '#888780', marginTop: 6, marginBottom: 0 }}>
-            Alimentation &amp; Boissons · Sources : FranceAgriMer · Matif · ICE
+            Alimentation &amp; Boissons · Sources : Alpha Vantage · ICE · CME · FranceAgriMer
           </p>
         </div>
 
@@ -300,7 +300,7 @@ export default async function NewsletterPage({ params }: { params: Promise<{ slu
         <div style={{ textAlign: 'center', padding: '8px 0 32px', fontSize: 11, color: '#888780', lineHeight: 2 }}>
           <Link href="/dashboard" style={{ color: '#534AB7', textDecoration: 'none', fontWeight: 500 }}>Accéder au dashboard complet</Link>
           <span style={{ margin: '0 8px' }}>·</span>
-          Sources : FranceAgriMer · Matif · ICE
+          Sources : Alpha Vantage · ICE · CME · FranceAgriMer
         </div>
 
       </div>
