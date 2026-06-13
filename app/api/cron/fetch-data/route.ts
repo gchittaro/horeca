@@ -11,12 +11,12 @@ function getISOWeek(date: Date) {
 function buildSystemPrompt() {
   return `Tu es l'analyste de marché de HoReCa.Watch, une plateforme de veille stratégique pour les professionnels de l'hôtellerie-restauration en France (CHR).
 
-Ton rôle est de collecter, analyser et structurer les données de marché chaque semaine à partir de sources publiques fiables.
+Ton rôle est de structurer les données de marché collectées chaque semaine depuis des sources réelles.
 
 ## Règles absolues
-1. Utilise tes connaissances des marchés de matières premières CHR pour fournir des estimations réalistes. Si les données brutes des APIs ne contiennent pas de prix précis, estime à partir de tes connaissances actuelles des cours de marché (Matif, ICE, FranceAgriMer). Ne mets "valeur": null QUE si tu n'as vraiment aucune base d'estimation.
-2. Les indicateurs doivent avoir des noms précis de produits : "Café arabica", "Blé tendre", "Viande bovine", "Huile de tournesol", "Sucre blanc", "Cacao", "Électricité spot", etc. — jamais "FranceAgriMer données" ou noms génériques.
-3. Les variations sont en pourcentage par rapport à la période précédente (semaine, mois ou trimestre selon le produit).
+1. INTERDICTION TOTALE d'inventer ou d'estimer un prix. Utilise UNIQUEMENT les valeurs numériques fournies dans la section "Prix réels Alpha Vantage". Si une valeur est absente ou marquée "indisponible", mets "valeur": null — jamais un chiffre inventé.
+2. Les indicateurs doivent avoir des noms précis : "Café arabica", "Blé tendre", "Sucre blanc", "Cacao", "Viande bovine", "Huile de tournesol", "Électricité spot", etc.
+3. Les variations sont en pourcentage par rapport à la période précédente fournie dans les données.
 4. Pour les signaux géopolitiques : ne signaler que ce qui a un impact direct probable sur les approvisionnements CHR en France dans les 4 à 8 semaines.
 5. Pour la réglementation CHR : surveiller spécifiquement — SMIC et grilles HCR, TVA restauration, convention collective HCR (IDCC 1979), réglementation sanitaire (HACCP, allergènes, DLC), affichage des prix et menus, conditions de travail dans la restauration, licences et autorisations d'exploitation, normes d'accessibilité ERP restauration.
 6. Niveau de langue : professionnel, factuel, sans sensationnalisme.
@@ -56,13 +56,10 @@ Valeurs autorisées pour "severite" : high, medium, low
 }
 
 function buildUserPrompt(rawData: Record<string, string>, previousWeekData: string, semaine: number) {
-  return `Voici les données brutes collectées cette semaine depuis les sources publiques de HoReCa.Watch.
+  return `Voici les données collectées cette semaine pour HoReCa.Watch (semaine ${semaine}).
 
-## Données FranceAgriMer (semaine ${semaine})
-${rawData.franceagrimer || 'Non disponible'}
-
-## Données RTE / EPEX — Énergie
-${rawData.energie || 'Non disponible'}
+## Prix réels Alpha Vantage (source officielle — NE PAS modifier ces chiffres)
+${rawData.alphavantage || 'Non disponible'}
 
 ## Flux RSS — L'Hôtellerie Restauration
 ${rawData.rss_chr || 'Non disponible'}
@@ -79,15 +76,79 @@ ${rawData.gdelt || 'Non disponible'}
 ## Contexte semaine précédente (pour calculer les variations)
 ${previousWeekData || 'Première collecte — pas de référence précédente'}
 
-Analyse ces données et retourne le JSON structuré. Ne retourne que le JSON.`
+Utilise UNIQUEMENT les prix Alpha Vantage pour les indicateurs chiffrés. Ne retourne que le JSON.`
 }
 
-async function fetchFranceAgriMer(): Promise<string> {
+type AVCommodity = { date: string; value: string }
+
+async function fetchAlphaVantage(): Promise<string> {
+  const key = process.env.ALPHA_VANTAGE_API_KEY
+  if (!key) return 'Clé Alpha Vantage manquante'
+
+  const base = 'https://www.alphavantage.co/query'
+
   try {
-    const res = await fetch('https://www.data.gouv.fr/api/1/datasets/?organization=5756b718a3a7292534b8de07&page_size=5', { next: { revalidate: 0 } })
-    const data = await res.json()
-    return JSON.stringify(data?.data?.slice(0, 3) || [])
-  } catch { return 'Erreur fetch FranceAgriMer' }
+    const [fxRes, coffeeRes, wheatRes, sugarRes, cocoaRes] = await Promise.all([
+      fetch(`${base}?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=EUR&apikey=${key}`, { next: { revalidate: 0 } }),
+      fetch(`${base}?function=COFFEE&interval=monthly&apikey=${key}`, { next: { revalidate: 0 } }),
+      fetch(`${base}?function=WHEAT&interval=monthly&apikey=${key}`, { next: { revalidate: 0 } }),
+      fetch(`${base}?function=SUGAR&interval=monthly&apikey=${key}`, { next: { revalidate: 0 } }),
+      fetch(`${base}?function=COCOA&interval=monthly&apikey=${key}`, { next: { revalidate: 0 } }),
+    ])
+
+    const [fxData, coffeeData, wheatData, sugarData, cocoaData] = await Promise.all([
+      fxRes.json(), coffeeRes.json(), wheatRes.json(), sugarRes.json(), cocoaRes.json(),
+    ])
+
+    const usdToEur = parseFloat(fxData?.['Realtime Currency Exchange Rate']?.['5. Exchange Rate'] ?? '0')
+    if (!usdToEur) return 'Taux de change USD/EUR indisponible'
+
+    function latest2(data: { data?: AVCommodity[] }): [AVCommodity | null, AVCommodity | null] {
+      const arr = data?.data ?? []
+      return [arr[0] ?? null, arr[1] ?? null]
+    }
+
+    function pct(curr: string, prev: string): number | null {
+      const c = parseFloat(curr), p = parseFloat(prev)
+      if (!c || !p) return null
+      return Math.round((c - p) / p * 1000) / 10
+    }
+
+    const [coffeeCurr, coffeePrev] = latest2(coffeeData)
+    const [wheatCurr, wheatPrev]   = latest2(wheatData)
+    const [sugarCurr, sugarPrev]   = latest2(sugarData)
+    const [cocoaCurr, cocoaPrev]   = latest2(cocoaData)
+
+    // cents/lb → €/t  (1 lb = 0.453592 kg → 1 t = 2204.62 lb)
+    const centsLbToEurT = (v: string) => Math.round(parseFloat(v) / 100 * 2204.62 * usdToEur)
+    // cents/bushel → €/t  (1 bushel wheat = 27.2155 kg)
+    const centsBuToEurT = (v: string) => Math.round(parseFloat(v) / 100 / 0.0272155 * usdToEur)
+    // USD/metric ton → €/t
+    const usdTToEurT    = (v: string) => Math.round(parseFloat(v) * usdToEur)
+
+    const lines: string[] = [`Taux EUR/USD utilisé : ${usdToEur}`]
+
+    if (coffeeCurr) lines.push(
+      `Café arabica : ${centsLbToEurT(coffeeCurr.value)} €/t (${coffeeCurr.date})` +
+      (coffeePrev ? ` | mois précédent : ${centsLbToEurT(coffeePrev.value)} €/t | variation : ${pct(coffeeCurr.value, coffeePrev.value)}%` : '')
+    )
+    if (wheatCurr) lines.push(
+      `Blé tendre : ${centsBuToEurT(wheatCurr.value)} €/t (${wheatCurr.date})` +
+      (wheatPrev ? ` | mois précédent : ${centsBuToEurT(wheatPrev.value)} €/t | variation : ${pct(wheatCurr.value, wheatPrev.value)}%` : '')
+    )
+    if (sugarCurr) lines.push(
+      `Sucre blanc : ${centsLbToEurT(sugarCurr.value)} €/t (${sugarCurr.date})` +
+      (sugarPrev ? ` | mois précédent : ${centsLbToEurT(sugarPrev.value)} €/t | variation : ${pct(sugarCurr.value, sugarPrev.value)}%` : '')
+    )
+    if (cocoaCurr) lines.push(
+      `Cacao : ${usdTToEurT(cocoaCurr.value)} €/t (${cocoaCurr.date})` +
+      (cocoaPrev ? ` | mois précédent : ${usdTToEurT(cocoaPrev.value)} €/t | variation : ${pct(cocoaCurr.value, cocoaPrev.value)}%` : '')
+    )
+
+    return lines.join('\n')
+  } catch (e) {
+    return `Erreur fetch Alpha Vantage: ${String(e)}`
+  }
 }
 
 async function fetchGDELT(): Promise<string> {
@@ -158,8 +219,8 @@ export async function GET(request: Request) {
   const ANNEE = url.searchParams.get('annee') ? parseInt(url.searchParams.get('annee')!) : now.getFullYear()
 
   // 1. Fetch toutes les sources en parallèle
-  const [franceagrimer, gdelt, jo, rss_chr, legifrance_chr] = await Promise.all([
-    fetchFranceAgriMer(),
+  const [alphavantage, gdelt, jo, rss_chr, legifrance_chr] = await Promise.all([
+    fetchAlphaVantage(),
     fetchGDELT(),
     fetchJO(),
     fetchRSSCHR(),
@@ -187,7 +248,7 @@ export async function GET(request: Request) {
       system: buildSystemPrompt(),
       messages: [{
         role: 'user',
-        content: buildUserPrompt({ franceagrimer, gdelt, jo, rss_chr, legifrance_chr }, JSON.stringify(prevWeek || []), SEMAINE),
+        content: buildUserPrompt({ alphavantage, gdelt, jo, rss_chr, legifrance_chr }, JSON.stringify(prevWeek || []), SEMAINE),
       }],
     }),
   })
