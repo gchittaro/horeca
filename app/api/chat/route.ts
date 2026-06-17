@@ -39,7 +39,7 @@ function buildSystemPrompt(
   ].filter(Boolean).join(' · ')
 
   const donneesMarcheStr = indicateurs.length
-    ? indicateurs.map(i => `${i.nom} : ${i.valeur} ${i.unite} (${i.variation_pct > 0 ? '+' : ''}${i.variation_pct.toFixed(1)}% · ${i.source})`).join('\n')
+    ? indicateurs.map(i => `${i.nom} : ${i.valeur ?? '—'} ${i.unite ?? ''} (${(i.variation_pct ?? 0) > 0 ? '+' : ''}${Number(i.variation_pct ?? 0).toFixed(1)}% · ${i.source})`).join('\n')
     : 'Données non disponibles cette semaine.'
 
   const signauxStr = signaux.length
