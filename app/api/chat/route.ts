@@ -119,72 +119,85 @@ Tu es un expert, pas un assistant généraliste. Chaque réponse doit apporter u
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
 
-  const admin = createAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    const admin = createAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-  const [isPro, etabOwnerId] = await Promise.all([
-    getUserIsPro(user.id),
-    getEtablissementOwnerId(user.id),
-  ])
-  if (!isPro) {
-    return NextResponse.json({ error: 'Réservé aux abonnés Pro' }, { status: 403 })
+    const [isPro, etabOwnerId] = await Promise.all([
+      getUserIsPro(user.id),
+      getEtablissementOwnerId(user.id),
+    ])
+    if (!isPro) {
+      return NextResponse.json({ error: 'Réservé aux abonnés Pro' }, { status: 403 })
+    }
+
+    // Quota journalier (par user individuel) — table may not exist yet, fail gracefully
+    const today = new Date().toISOString().split('T')[0]
+    let usageCount = 0
+    try {
+      const { data: usage } = await admin.from('chat_usage').select('count').eq('user_id', user.id).eq('date', today).single()
+      usageCount = usage?.count ?? 0
+      if (usageCount >= QUOTA) {
+        return NextResponse.json({ error: `Quota journalier atteint (${QUOTA} questions/jour). Revenez demain.`, quota_reached: true }, { status: 429 })
+      }
+    } catch {
+      // chat_usage table doesn't exist yet — skip quota check
+    }
+
+    const { message } = await request.json()
+    if (!message?.trim()) return NextResponse.json({ error: 'Message vide' }, { status: 400 })
+
+    const semaine = getISOWeek(new Date())
+    const annee = new Date().getFullYear()
+
+    const [{ data: etablissement }, { data: indicateurs }, { data: signaux }] = await Promise.all([
+      admin.from('etablissements').select('type_etablissement, region, couverts_par_jour, role, vol_cafe, vol_viandes, vol_laitiers, vol_farine, vol_huiles, vol_energie, fournisseurs').eq('user_id', etabOwnerId).single(),
+      admin.from('indicateurs').select('nom, valeur, unite, variation_pct, source').eq('semaine', semaine).eq('annee', annee),
+      admin.from('signaux_geopolitiques').select('titre, description, impact, horizon').order('fetched_at', { ascending: false }).limit(5),
+    ])
+
+    const systemPrompt = buildSystemPrompt(
+      etablissement as Record<string, unknown> | null,
+      (indicateurs || []) as { nom: string; valeur: number; unite: string; variation_pct: number; source: string }[],
+      (signaux || []) as { titre: string; description: string; impact: string; horizon: string }[],
+      semaine,
+      annee,
+    )
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY!,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: message }],
+      }),
+    })
+
+    if (!res.ok) {
+      const errText = await res.text()
+      console.error('[chat] Anthropic error:', res.status, errText)
+      return NextResponse.json({ error: 'Erreur IA temporaire, réessayez.', detail: errText }, { status: 502 })
+    }
+    const data = await res.json()
+    const answer: string = data.content?.[0]?.text || ''
+    if (!answer) return NextResponse.json({ error: 'Réponse vide de l\'IA.' }, { status: 502 })
+
+    // Increment quota — fire-and-forget, non-blocking
+    void admin.rpc('increment_chat_usage', { p_user_id: user.id, p_date: today })
+
+    const remaining = QUOTA - (usageCount + 1)
+    return NextResponse.json({ answer, quota_remaining: remaining })
+  } catch (err) {
+    console.error('[chat] Unhandled error:', err)
+    return NextResponse.json({ error: 'Erreur interne', detail: String(err) }, { status: 500 })
   }
-
-  // Quota journalier (par user individuel)
-  const today = new Date().toISOString().split('T')[0]
-  const { data: usage } = await admin.from('chat_usage').select('count').eq('user_id', user.id).eq('date', today).single()
-  if (usage && usage.count >= QUOTA) {
-    return NextResponse.json({ error: `Quota journalier atteint (${QUOTA} questions/jour). Revenez demain.`, quota_reached: true }, { status: 429 })
-  }
-
-  const { message } = await request.json()
-  if (!message?.trim()) return NextResponse.json({ error: 'Message vide' }, { status: 400 })
-
-  const semaine = getISOWeek(new Date())
-  const annee = new Date().getFullYear()
-
-  const [{ data: etablissement }, { data: indicateurs }, { data: signaux }] = await Promise.all([
-    admin.from('etablissements').select('type_etablissement, region, couverts_par_jour, role, vol_cafe, vol_viandes, vol_laitiers, vol_farine, vol_huiles, vol_energie, fournisseurs').eq('user_id', etabOwnerId).single(),
-    admin.from('indicateurs').select('nom, valeur, unite, variation_pct, source').eq('semaine', semaine).eq('annee', annee),
-    admin.from('signaux_geopolitiques').select('titre, description, impact, horizon').order('fetched_at', { ascending: false }).limit(5),
-  ])
-
-  const systemPrompt = buildSystemPrompt(
-    etablissement as Record<string, unknown> | null,
-    (indicateurs || []) as { nom: string; valeur: number; unite: string; variation_pct: number; source: string }[],
-    (signaux || []) as { titre: string; description: string; impact: string; horizon: string }[],
-    semaine,
-    annee,
-  )
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY!,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: message }],
-    }),
-  })
-
-  if (!res.ok) {
-    console.error('[chat] Anthropic error:', res.status, await res.text())
-    return NextResponse.json({ error: 'Erreur IA temporaire, réessayez.' }, { status: 502 })
-  }
-  const data = await res.json()
-  const answer: string = data.content?.[0]?.text || ''
-  if (!answer) return NextResponse.json({ error: 'Réponse vide de l\'IA.' }, { status: 502 })
-
-  await admin.rpc('increment_chat_usage', { p_user_id: user.id, p_date: today })
-
-  const remaining = QUOTA - ((usage?.count || 0) + 1)
-  return NextResponse.json({ answer, quota_remaining: remaining })
 }
