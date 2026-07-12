@@ -68,7 +68,7 @@ export default function ProfilPage() {
         .from('etablissements')
         .select('nom_gerant, telephone, role, plan, alert_surcout, alert_geopolitique, alert_reglementation, alert_rapport_pdf')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
 
       if (profil) {
         const fullName = profil.nom_gerant || user.user_metadata?.full_name || ''
@@ -96,7 +96,7 @@ export default function ProfilPage() {
         .from('organisations')
         .select('id')
         .eq('owner_id', user.id)
-        .single()
+        .maybeSingle()
       setIsOrgOwner(!!orgData)
 
       // isPro fiable : inclut les membres d'organisation

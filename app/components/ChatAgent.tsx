@@ -49,20 +49,29 @@ export default function ChatAgent() {
     setMessages(prev => [...prev, { role: 'user', text: userMsg }])
     setLoading(true)
 
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: userMsg }),
-    })
-    const data = await res.json()
+    let data: Record<string, unknown> = {}
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMsg }),
+      })
+      data = await res.json()
+    } catch {
+      setLoading(false)
+      setMessages(prev => [...prev, { role: 'agent', text: 'Erreur réseau. Vérifiez votre connexion et réessayez.' }])
+      return
+    }
     setLoading(false)
 
     if (data.quota_reached) {
       setQuotaReached(true)
-      setMessages(prev => [...prev, { role: 'agent', text: data.error }])
+      setMessages(prev => [...prev, { role: 'agent', text: data.error as string }])
     } else if (data.answer) {
-      setMessages(prev => [...prev, { role: 'agent', text: data.answer }])
-      setQuota(data.quota_remaining)
+      setMessages(prev => [...prev, { role: 'agent', text: data.answer as string }])
+      setQuota(data.quota_remaining as number)
+    } else if (data.error) {
+      setMessages(prev => [...prev, { role: 'agent', text: `Erreur : ${data.error}` }])
     } else {
       setMessages(prev => [...prev, { role: 'agent', text: 'Une erreur est survenue. Réessayez.' }])
     }
