@@ -69,6 +69,7 @@ export default async function HomePage() {
         <div className="hide-mobile" style={{ display: 'flex', gap: 24 }}>
           <a href="#features" style={{ fontSize: 13, color: '#D3D1C7', textDecoration: 'none' }}>Fonctionnalités</a>
           <a href="#pricing"  style={{ fontSize: 13, color: '#D3D1C7', textDecoration: 'none' }}>Tarifs</a>
+          <Link href="/blog"  style={{ fontSize: 13, color: '#D3D1C7', textDecoration: 'none' }}>Blog</Link>
         </div>
         {user ? (
           <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
