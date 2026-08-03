@@ -22,6 +22,18 @@ const VOL_TO_NOM: Record<string, string> = {
   vol_energie: 'Électricité spot',
 }
 
+// Le nom exact d'un indicateur varie d'une semaine à l'autre (généré par l'IA de collecte,
+// ex. "Viande bovine" vs "Bœuf haché 15%"). On matche par mot-clé plutôt que par égalité stricte
+// pour que les 6 postes récupèrent bien leur variation hebdo réelle, pas seulement le café.
+const VOL_KEYWORDS: Record<string, RegExp> = {
+  vol_cafe: /café|cafe/i,
+  vol_viandes: /viande|bœuf|boeuf/i,
+  vol_laitiers: /lait|beurre|crème|creme|fromage|œuf|oeuf/i,
+  vol_farine: /farine|blé|ble/i,
+  vol_huiles: /huile/i,
+  vol_energie: /électric|electric|énergie|energie|gaz/i,
+}
+
 export default async function SimulatorPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -31,32 +43,31 @@ export default async function SimulatorPage() {
   const annee = now.getFullYear()
   const dateMAJ = formatUpdateDate()
 
-  const noms = Object.values(VOL_TO_NOM)
-  let indicateursDB: { nom: string; variation_pct: number; valeur: number | null; unite: string | null; source: string }[] | null = null
+  let indicateursDB: { nom: string; variation_pct: number; valeur: number | null; unite: string | null; source: string; periode?: string }[] | null = null
 
   if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
     const admin = createAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
     const { data } = await admin
       .from('indicateurs')
-      .select('nom, variation_pct, valeur, unite, source')
+      .select('nom, variation_pct, valeur, unite, source, periode')
       .eq('semaine', semaine)
       .eq('annee', annee)
-      .in('nom', noms)
     indicateursDB = data
   }
 
-  const source = indicateursDB?.length ? indicateursDB : mockIndicateurs.filter(i => noms.includes(i.nom))
-  const byNom = Object.fromEntries(source.map(i => [i.nom, i]))
+  const source = indicateursDB?.length ? indicateursDB : mockIndicateurs
 
-  const indicateurs: SimIndicateur[] = Object.entries(VOL_TO_NOM).map(([key, nom]) => {
-    const ind = byNom[nom]
+  const indicateurs: SimIndicateur[] = Object.entries(VOL_TO_NOM).map(([key, defaultNom]) => {
+    const keyword = VOL_KEYWORDS[key]
+    const ind = source.find(i => keyword.test(i.nom))
     return {
       key,
-      nom,
+      nom: ind?.nom ?? defaultNom,
       variation_pct: ind?.variation_pct ?? 0,
       valeur: ind?.valeur ?? null,
       unite: ind?.unite ?? null,
       source: ind?.source ?? '—',
+      periode: ind?.periode,
     }
   })
 

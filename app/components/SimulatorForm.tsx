@@ -13,6 +13,34 @@ export type SimIndicateur = {
   valeur: number | null
   unite: string | null
   source: string
+  periode?: string
+}
+
+const periodeLabel: Record<string, string> = {
+  hebdo:    'vs sem. préc.',
+  mensuel:  'vs mois préc.',
+  annuel:   'vs an préc.',
+  trimestr: 'vs trim. préc.',
+  semestr:  'vs sem. préc.',
+}
+
+function PillVariation({ pct, periode }: { pct: number; periode?: string }) {
+  const label = periode ? (periodeLabel[periode] ?? periode) : 'vs sem. préc.'
+  if (pct === 0) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+      <div style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: '#EEEDFE', color: '#3C3489' }}>= stable</div>
+      <div style={{ fontSize: 9, color: '#8f8ac4' }}>{label}</div>
+    </div>
+  )
+  const up = pct > 0
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+      <div style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, background: up ? '#FCEBEB' : '#EAF3DE', color: up ? '#A32D2D' : '#3B6D11' }}>
+        {up ? '↑ +' : '↓ '}{Math.abs(pct).toFixed(1)}%
+      </div>
+      <div style={{ fontSize: 9, color: '#8f8ac4' }}>{label}</div>
+    </div>
+  )
 }
 
 const ICONS: Record<string, React.ElementType> = {
@@ -99,12 +127,16 @@ export default function SimulatorForm({ indicateurs }: { indicateurs: SimIndicat
         {hasVolumes && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {impacts.filter(i => i.volume > 0).map(i => (
-              <div key={i.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1F1A4A', borderRadius: 8, padding: '9px 13px' }}>
-                <div style={{ fontSize: 12, color: '#D3D1C7' }}>
-                  {i.nom} ({i.variation_pct > 0 ? '+' : ''}{i.variation_pct === 0 ? 'stable' : i.variation_pct.toFixed(1) + '%'} · {i.volume.toLocaleString('fr-FR')} €/mois)
+              <div key={i.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1F1A4A', borderRadius: 8, padding: '9px 13px', gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 12, color: '#D3D1C7' }}>{i.nom}</div>
+                  <div style={{ fontSize: 10, color: '#8f8ac4', marginTop: 2 }}>{i.volume.toLocaleString('fr-FR')} €/mois</div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: i.impact > 0 ? '#F09595' : i.impact < 0 ? '#97C459' : '#AFA9EC' }}>
-                  {i.impact > 0 ? '+' : ''}{i.impact === 0 ? '= 0 €' : i.impact + ' €'}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                  <PillVariation pct={i.variation_pct} periode={i.periode} />
+                  <div style={{ fontSize: 13, fontWeight: 500, color: i.impact > 0 ? '#F09595' : i.impact < 0 ? '#97C459' : '#AFA9EC', minWidth: 52, textAlign: 'right' }}>
+                    {i.impact > 0 ? '+' : ''}{i.impact === 0 ? '= 0 €' : i.impact + ' €'}
+                  </div>
                 </div>
               </div>
             ))}
